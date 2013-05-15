@@ -1,0 +1,47 @@
+* Added spike.rb
+
+** Analysed the Source View of swissreg.ch to extract the needed field information.
+** Navigating to the extended search works
+** Most fields are recognized correctly but the most important name timespan give errors
+** Queries can fail for a lot of different reasons (see bekannteFehler in spike.rb)
+** When filling the "Wortlaut der Marke" with a pattern like "asp*" the query worked, but did not respect the timespan
+** Using the interactive form I also remarked that the entered timespan was not always correctly honoured by swissreg
+
+(Just for the recording)
+
+* Mechanize does not work with swissreg.ch
+
+Here the example, which shows that mechanize does not recognize the content.
+
+bc. require 'mechanize'
+require 'prettyprint'
+
+a = Mechanize.new { |agent|
+ #  agent.user_agent_alias = 'Mac Safari'
+  agent.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:16.0) Gecko/20100101 Firefox/16.0'
+  agent.redirect_ok         = true
+  agent.redirection_limit   = 5
+  agent.follow_meta_refresh = true
+  agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
+}
+  
+a.get('https://www.swissreg.ch/') do |page|
+  pp page
+  pp page.links.size
+  pp page.content
+end
+
+This returns
+
+bc. #<Mechanize::Page
+ {url #<URI::HTTPS:0x000000015ad830 URL:https://www.swissreg.ch/>}
+ {meta_refresh}
+ {title nil}
+ {iframes}
+ {frames}
+ {links}
+ {forms}>
+0
+"\n<head>\n<meta name=\"keywords\" \ncontent=\"Recherchen, Datenbankrecherche, Patentinformation, Patentrecherche, Patent, \nPatentamt, IGE, Eidgen\xC3\xB6sches Institut f\xC3\xBCstiges Eigentum, Infocenter, Patentsammlung, \nPatentdokument, Register, Schutzrecht, Patentgesetz, Patentverordnung, Markengesetz, Haager \nAbkommen, Erfindungen, Erfinder, Marktanalyse, Informationsvermittlung, unlauterer \nWettbewerb, Erfindungspatent, Herkunftsbezeichnungen, SHAB, PMMBl, Handelsamtsblatt, \nMarkenschutz, Marke, Namen, domain, domainnamen, Markenanmeldung, Urheberrecht, Suisa, Pro \nLiteris, SSA, SMCC, Suissimage, Verwertungsgesellschaften, Topographien, \nImmaterialg\xC3\xBCcht, espacenet, Gratisdatenbank, Design, Designschutz, Muster und  \nRaubkopien, Geschmacksmuster, Gebrauchsmuster, ESZ, Schutzzertifikate\">\n\n<meta name=\"description\" \ncontent=\"Schweizer Patentamt, Patente, Marken, Design, ESZ, Urheberrecht, Recherchen, \nTopographie, Datenbanken\">\n\n<meta name=\"abstract\" \ncontent=\" Datenbankrecherchen, Patentrecherchen, Markenschutz, Markenrecherchen, Design, \nMuster Modelle, Designrecherche, Urheberrecht\">\n\n<meta name=\"revisit-after\" \ncontent=\"7 days\">\n\n<meta name=\"robots\" \ncontent=\"ALL\">\n</head>\n\n<body>\n<!--<meta http-equiv=\"refresh\" content=\"0; URL=https://www.swissreg.ch/srclient/\">-->\n<meta http-equiv=\"refresh\" content=\"0; URL=https://www.swissreg.ch/srclient/\">\n</body>\n"
+
+* Therefore we continue using net/uri
