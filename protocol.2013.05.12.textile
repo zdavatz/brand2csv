@@ -1,0 +1,55 @@
+h3. started brand2csv (12 May 2013
+
+* Added minimal files to create a Ruby gem
+* Started a spike.rb to fetch some elements from swissreg.ch via mechanize
+* To get familiar with mechanize used the google example
+  Had to replace @page.form_with(:name => 'f')@  by @page.form_with(:name => 'gbqf')@ 
+
+* www.swissreg.ch must be opened with agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+* Examples of a link to details for a brand record are 
+bc. https://www.swissreg.ch/srclient/de/tm/61082/2011
+https://www.swissreg.ch/srclient/de/tm/61082/2011
+https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=en&section=tm&id=61082/2011
+
+* Links 
+** Marken Suchen https://www.swissreg.ch/srclient/faces/jsp/start.jsp
+** Erweitertete Suchen https://www.swissreg.ch/srclient/faces/jsp/trademark/sr1.jsp
+** Resultate der Detailsuche unter https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp
+
+Wasted some time to discover that swissreg.rb does not use mechanize, but URI and hpricot to fetch the patent registration.
+
+With watir the following few lines sufficed to fetch a detail
+
+bc. Swiss_reg_URL = 'https://www.swissreg.ch'
+client = Selenium::WebDriver::Remote::Http::Default.new
+browser  = Watir::Browser.new :firefox 
+browser.goto Swiss_reg_URL
+browser.link(:id, "id_swissreg_sub_nav_ipiNavigation_item0").click
+browser.link(:id, "id_swissreg_sub_nav_ipiNavigation_item0_item3").click
+browser.text_field(:id, "id_swissreg:mainContent:id_txf_appDate").set("1.10.2011-5.10.2011")
+browser.button(:value,"suchen").click
+browser.link(:id, "id_swissreg:mainContent:data:2:tm_no_detail:id_detail").click# puts browser.text
+
+Was not able to create a spike using either mechnize or uri/hpricot to fetch the details.
+
+* Thoughts about the CLI interface to csv
+bc. brand2csh --help
+Useage brand2csh 1.10.2011-5.10.2011 [name_of_brand]
+Fetches brand records from swissreg for the given date range into results.csv.
+Each result contains the following fields
+- date of registration
+- brandname
+- owner of brand
+-- name
+-- addressline1
+-- addressline2 (optional)
+-- zip code
+-- city
+Only owners inside Switzerland will be returned.
+
+* Would this be a good extension?
+Accumulate all given results (+ temporary result like info_line_1..x) into a sqlite database.
+Would allow an easy sql manipulation of data for filtering/sorting addresses, etc.
+
+
