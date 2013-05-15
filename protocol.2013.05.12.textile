@@ -34,6 +34,7 @@ browser.link(:id, "id_swissreg:mainContent:data:2:tm_no_detail:id_detail").click
 Was not able to create a spike using either mechnize or uri/hpricot to fetch the details.
 
 * Thoughts about the CLI interface to csv
+
 bc. brand2csh --help
 Useage brand2csh 1.10.2011-5.10.2011 [name_of_brand]
 Fetches brand records from swissreg for the given date range into results.csv.
