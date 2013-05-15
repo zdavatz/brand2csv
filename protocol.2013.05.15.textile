@@ -9,7 +9,7 @@
 
 * Another problem is the fact that according to "swissreg":https://www.swissreg.ch/help/de/sr2000.shtm we are only able to fetch 500 records at the same time
 
-bc.Bitte beachten Sie, dass insgesamt maximal 500 Treffer angezeigt werden. Sollte Ihre Suche mehr als 500 Treffer ergeben, wird eine vereinfachte Trefferliste angezeigt. Sollte Ihre Suche mehr als 10’000 Treffer ergeben, dann werden willkürlich 10’000 Treffer ausgewählt und angezeigt.
+bc. Bitte beachten Sie, dass insgesamt maximal 500 Treffer angezeigt werden. Sollte Ihre Suche mehr als 500 Treffer ergeben, wird eine vereinfachte Trefferliste angezeigt. Sollte Ihre Suche mehr als 10’000 Treffer ergeben, dann werden willkürlich 10’000 Treffer ausgewählt und angezeigt.
 
 (Just for the recording)
 
