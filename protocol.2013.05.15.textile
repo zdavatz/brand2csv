@@ -19,7 +19,6 @@ Here the example, which shows that mechanize does not recognize the content.
 
 bc. require 'mechanize'
 require 'prettyprint'
-
 a = Mechanize.new { |agent|
  #  agent.user_agent_alias = 'Mac Safari'
   agent.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:16.0) Gecko/20100101 Firefox/16.0'
@@ -28,7 +27,6 @@ a = Mechanize.new { |agent|
   agent.follow_meta_refresh = true
   agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
 }
-  
 a.get('https://www.swissreg.ch/') do |page|
   pp page
   pp page.links.size
