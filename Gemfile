@@ -5,7 +5,7 @@ git 'git://github.com/sparklemotion/mechanize.git' do #, :tag => 'v0.13.4'
   gem 'mechanize'
 end if false
 gem 'json', '~> 1.7.7'
-gem 'hpricot'
+gem 'nokogiri'
 
 
 group :development do
