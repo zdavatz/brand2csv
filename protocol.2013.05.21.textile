@@ -1,0 +1,19 @@
+* Added spike_mechanize_swissreg.rb
+
+Also this attempt works if I specify a trademark name or number. But it does not work, when specifying a timespan for the "Hinterlegungsdatum".
+Rechecked the Javascript parameters, but I cannot see the problem.
+
+Therefore I try no to parse the needed information from the page.
+
+I found out that there is either the name or a an image used as the trademark.
+Loading the details of a trademark using ids like the following
+https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=en&section=tm&id=343260 # Ohne Bild
+https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=en&section=tm&id=P-328879
+takes a long time.
+
+* Encountered problems
+
+Long addresses are not fully displayed, e.g.
+343260  Laboratoires Sauter S.A., 46, chemin de l'Etang, Vernier;, adresse pour la correspondance:, Bureau des Marques, case ...
+
+In this case one has to parse
