@@ -1,0 +1,17 @@
+.gitignore
+.rspec
+Gemfile
+History.txt
+LICENSE
+Manifest.txt
+README.md
+Rakefile
+bin/brand2csv
+lib/brand2csv.rb
+lib/brand2csv/version.rb
+spec/data/detail_343260.html
+spec/data/einfache_suche.html
+spec/data/erweiterte_suche.html
+spec/data/main.html
+spec/data/resultate_1.html
+spec/spec_helper.rb
