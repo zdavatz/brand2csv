@@ -2,7 +2,6 @@
 #encoding: utf-8
 
 require 'prettyprint'
-require 'hpricot'
 require 'net/http'
 require 'cgi'
 
@@ -146,32 +145,6 @@ class Session < HttpSession
     # swissreg does not have sslv3 cert
     #@http.ssl_version = 'SSLv3'
     @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-  end
-  def extract_result_links(response)
-    body = response.body
-    body.force_encoding('utf-8')
-    doc = Hpricot.make(body, {})
-    path = "//a[@target='detail']/span[@title='zur Detailansicht']"
-    url   = @base_uri + "/srclient/faces/jsp/spc/sr30.jsp"
-    param = nil
-    if input = (doc/"//input[@value^=SPC]").first
-      param = input.attributes['value']
-    else
-      # Not found in swissreg.ch
-    end
-    if param
-      state = view_state(response)
-      (doc/path).collect { |span|
-        unless span.inner_html =~ /^</ # skip strange images
-          if span.parent['onclick'].to_s =~ /\[\[.*'(\d*)'\]\]/
-            id = $1
-            [url, id, state, param]
-          end
-        end
-      }.uniq.compact
-    else
-      []
-    end
   end
   def get(url, *args) # this method can not handle redirect
     res = super
