@@ -1,8 +1,39 @@
 #!/usr/bin/env ruby
 require 'mechanize'
 require 'prettyprint'
+require 'optparse'
 
+Useage = "Usage: #{File.basename(__FILE__)} timespan
+    Find all brands registered in switzerland during the given timespan.
+    The following examples valid timespan periods:
+      1.10.2005
+      1.10.2005-31.10.2005
+      1.10.2005, 5.10.2005-31.10.2005
+"
+OptionParser.new do |opts|
+  opts.banner = Useage
+  opts.on("-h", "--help", "Show this help") do |v|
+    puts opts
+    exit
+  end
+end.parse!
+unless ARGV
+  puts Useage
+  exit 1
+end
 
+timespan = ARGV[0] 
+
+module Brand2csv do
+      # Weitere gesehene Fehler
+    bekannteFehler = 
+        ['Das Datum ist ung', # ültig'
+          'Es wurden keine Daten gefunden.',
+          'Die Suchkriterien sind teilweise unzul', # ässig',
+          'Geben Sie mindestens ein Suchkriterium ein',
+          'Die Suche wurde abgebrochen, da die maximale Suchzeit von 60 Sekunden',
+        ]
+end
 $base_uri = 'https://www.swissreg.ch'
 $start_uri = "#{$base_uri}/srclient/faces/jsp/start.jsp"
   
@@ -13,7 +44,6 @@ def writeResponse(filename, body)
 end
 
 def view_state(response)
-#  if match = /javax.faces.ViewState.*?value="([^"]+)"/u.match(response.body.force_encoding('utf-8'))
   if match = /javax.faces.ViewState.*?value="([^"]+)"/u.match(response.force_encoding('utf-8'))
     match[1]
   else
@@ -268,6 +298,9 @@ def fetchresult(filename= 'mechanize/resultate_1.html')
   puts "Es gab #{nrFailures} Fehler beim lesen von #{filename}"  if $VERBOSE
 end
 
+pp 1
+parse_swissreg(timespan)
+pp 2
 fetchresult
 $errors.each{ 
   |markennummer, info|
