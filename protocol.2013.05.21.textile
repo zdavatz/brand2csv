@@ -16,4 +16,4 @@ takes a long time.
 Long addresses are not fully displayed, e.g.
 343260  Laboratoires Sauter S.A., 46, chemin de l'Etang, Vernier;, adresse pour la correspondance:, Bureau des Marques, case ...
 
-In this case one has to parse
+In this case one has to parse the detail html, which is just quite slow.

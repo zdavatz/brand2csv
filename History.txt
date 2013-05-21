@@ -1,4 +1,8 @@
 === 0.1 / 21.05.2013
 
 *  First release. Does not handle timespan correctly
+*  Reads only the first 100 records
+*  Saves only "Inhaber" with an address inside Switzerland (by design)
+
+
 

@@ -41,6 +41,7 @@ module Brand2csv
       @errors  = Hash.new
       @lastResponse = nil
       @lastDetail =nil
+      @counterDetails = 0
       @marke = 'asp*' # ansonsten habe ich fehler
     end
     
@@ -204,6 +205,7 @@ module Brand2csv
     end
 
     def fetchDetails(nummer) # takes a long time!
+      @counterDetails += 1
       filename = "mechanize/detail_#{nummer}.html"
       if File.exists?(filename)
         doc = Nokogiri::Slop(File.open(filename))
@@ -214,6 +216,7 @@ module Brand2csv
         writeResponse("mechanize/detail_#{nummer}.html", content)
         doc = Nokogiri::Slop(content)
       end
+      puts "Bitte um Geduld. Hole Adressdetails für Marke #{nummer}. (#{@counterDetails} von #{@errors.size})"
       path_name = "//html/body/form/div/div/fieldset/div/table/tbody/tr/td"
       counter = 0
       doc.xpath(path_name).each{ 
@@ -267,10 +270,13 @@ module Brand2csv
         end
       }
       puts "Es gab #{nrFailures} Fehler beim lesen von #{filename}"  if $VERBOSE
+      puts "Fand #{@results.size} Datensätze für die Zeitspanne '#{@timespan}'. Von #{@errors.size} muss die Adresse noch geholt werden."
     end
 
     def emitCsv(filename='ausgabe.csv')
-      CSV.open(filename, 'w+') do |csv|
+      return if @results.size == 0
+      CSV.open(filename,  'w', {:headers=>@results[0].members,
+                                :write_headers => true}) do |csv|
         @results.each{ |x| csv << x }
       end
       puts "Speicherte #{@results.size} gefunden Datensätze für die Zeitspanne '#{@timespan}' in #{filename}"
