@@ -346,7 +346,7 @@ class Session < HttpSession
     ausgabe.close
   end
   
-  def getSimpleMarkenSuche(timespan = "1.11.2011-5.11.2011")
+  def getSimpleMarkenSuche(timespan = "1.11.2011-5.11.2011", marke = "")
     puts("getSimpleMarkenSuche #{timespan}")
     path = '/srclient/'
     # discard this first response
@@ -414,7 +414,7 @@ Aufgrund der grossen Datenmenge wird Ihnen eine vereinfachte Trefferliste angeze
       ["id_swissreg:mainContent:id_cbxCountry", "CH"], # Auswahl Länder _ALL
       ["id_swissreg:mainContent:id_txf_tm_no", ""],  # Marken Nr
       ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
-      ["id_swissreg:mainContent:id_txf_tm_text", ""],                # Wortlaut der Marke
+      ["id_swissreg:mainContent:id_txf_tm_text", "#{marke}"],                # Wortlaut der Marke
       ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
       ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
       ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
@@ -441,7 +441,7 @@ Aufgrund der grossen Datenmenge wird Ihnen eine vereinfachte Trefferliste angeze
       
       # Angezeigte Spalten "id_swissreg:mainContent:id_ckbTMChoice"
       ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_tm_text"], # Marke
-      ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_state"], # Status
+      # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_state"], # Status
       # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_nizza_class"], # Nizza Klassifikation Nr.
       # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_no"], # disabled="disabled"], # Nummer
       ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_applicant"], # Inhaber/in
@@ -514,4 +514,5 @@ end
 end
 
 mySession = ODDB::Swissreg::Session.new
-mySession.getSimpleMarkenSuche( "1.10.2011-5.10.2011")
+mySession.getSimpleMarkenSuche( "1.10.2011-5.10.2011", "asp*")
+
