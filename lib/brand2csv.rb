@@ -17,6 +17,8 @@ module Brand2csv
       # Weitere gesehene Fehler
     BekannteFehler = 
           ['Das Datum ist ung', # ültig'
+           'Erweiterte Suche',
+           'Vereinfachte Trefferliste anzeigen',
             'Es wurden keine Daten gefunden.',
             'Die Suchkriterien sind teilweise unzul', # ässig',
             'Geben Sie mindestens ein Suchkriterium ein',
@@ -27,6 +29,19 @@ module Brand2csv
     AddressRegexp = /^(\d\d\d\d)\W*(.*)/
     LineSplit     = ', '
     DefaultCountry = 'Schweiz'
+    # Angezeigte Spalten "id_swissreg:mainContent:id_ckbTMChoice"
+    TMChoiceFields = [ 
+            "tm_lbl_tm_text", # Marke
+            # "tm_lbl_state"], # Status
+            # "tm_lbl_nizza_class"], # Nizza Klassifikation Nr.
+            # "tm_lbl_no"], # disabled="disabled"], # Nummer
+            "tm_lbl_applicant", # Inhaber/in
+            "tm_lbl_country", # Land (Inhaber/in)
+            # "tm_lbl_agent", # Vertreter/in
+            # "tm_lbl_licensee"], # Lizenznehmer/in
+            "tm_lbl_app_date", # Hinterlegungsdatum
+            ]
+
     attr_accessor :marke
     
     def initialize(timespan)
@@ -42,7 +57,18 @@ module Brand2csv
       @lastResponse = nil
       @lastDetail =nil
       @counterDetails = 0
-      @marke = 'asp*' # ansonsten habe ich fehler
+      @marke = 'zzzyyzzzzyzzyz*' # => Fehlermeldung: Es wurden keine Daten gefunden
+      # asp* => 138 records werden geholt
+      # a* => Es wurden 25,490 Treffer gefunden. Davon werden 10000 zufällig ausgewählte Schutztitel angezeigt. Bitte schränken Sie Ihre Suche weiter ein.
+      #       Ab 501 Treffer wird eine vereinfachte Trefferliste angezeigt.  
+      # asp* => 138 records werden geholt
+
+      @marke = nil # => Fehlermeldung: Geben Sie mindestens ein Suchkriterium ein
+      @marke = 'asp*' 
+      @number = '500000'
+      @number = nil
+#      @marke = "*WEIH*"
+      @hitsPerPage = 100
     end
     
     def writeResponse(filename, body)
@@ -63,20 +89,30 @@ module Brand2csv
       end
     end
 
+    def checkErrors(body)
+      BekannteFehler.each {
+      |errMsg|
+        if body.to_s.index(errMsg)
+          puts "Tut mir leid. Suche wurde mit Fehlermeldung <#{errMsg}> abgebrochen."
+          exit 2
+        end
+      }
+    end
+    
     def parse_swissreg(timespan = @timespan,  # sollte 377 Treffer ergeben, für 01.06.2007-10.06.2007, 559271 wurde in diesem Zeitraum registriert
                       marke = @marke,    
-                      nummer =nil) #  nummer = "559271" ergibt genau einen treffer
+                      nummer =@number) #  nummer = "559271" ergibt genau einen treffer
       @agent.get Start_uri  # get a cookie for the session
       content = @agent.get_file Start_uri
       FileUtils.makedirs 'mechanize'
       writeResponse('mechanize/main.html', content)
-      state = view_state(content)
+      @state = view_state(content)
       data = [
         ["autoScroll", "0,0"],
         ["id_swissreg:_link_hidden_", ""],
         ["id_swissreg_SUBMIT", "1"],
         ["id_swissreg:_idcl", "id_swissreg_sub_nav_ipiNavigation_item0"],
-        ["javax.faces.ViewState", state],
+        ["javax.faces.ViewState", @state],
       ]
 
       content = @agent.post(Start_uri, data)  
@@ -87,37 +123,37 @@ module Brand2csv
         ["id_swissreg:_link_hidden_", ""],
         ["id_swissreg_SUBMIT", "1"],
         ["id_swissreg:_idcl", "id_swissreg_sub_nav_ipiNavigation_item0_item3"],
-        ["javax.faces.ViewState", state],
+        ["javax.faces.ViewState", @state],
       ]
       # sr1 ist die einfache suche, sr3 die erweiterte Suche
-      path = "/srclient/faces/jsp/trademark/sr3.jsp"
-      response = @agent.post(Base_uri + path, data)
+      @path = "/srclient/faces/jsp/trademark/sr3.jsp"
+      response = @agent.post(Base_uri + @path, data)
       writeResponse('mechanize/erweiterte_suche.html', response.body)
       # Bis hier alles okay
-          criteria = [
-            ["autoScroll", "0,0"],
+          @criteria = [
+            ["autoScroll", "0,829"],
             ["id_swissreg:_link_hidden_", ""],
-            # "id_swissreg:mainContent:id_cbxFormatChoice" 2 = Publikationsansicht 1 = Registeransicht
-            ["id_swissreg:mainContent:id_cbxFormatChoice", "1"],
             ["id_swissreg:mainContent:id_ckbTMState", "1"], # "Hängige Gesuche 1
       #      ["id_swissreg:mainContent:id_ckbTMState", "2"], # "Gelöschte Gesuche 2
             ["id_swissreg:mainContent:id_ckbTMState", "3"], # aktive Marken 3 
       #      ["id_swissreg:mainContent:id_ckbTMState", "4"], # gelöschte Marken 4
-            ["id_swissreg:mainContent:id_cbxCountry", "CH"], # Auswahl Länder _ALL
-      #      ["id_swissreg:mainContent:id_txf_tm_no", ""],  # Marken Nr
+            ["id_swissreg:mainContent:id_cbxCountry", "_ALL"], # Auswahl Länder _ALL
+#            ["id_swissreg:mainContent:id_txf_tm_no", ""],  # Marken Nr
+            ["id_swissreg:mainContent:id_txf_tm_no", nummer],# Marken Nr
             ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
+            ["id_swissreg:mainContent:id_txf_tm_text", marke],
             ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
             ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
             ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
             ["id_swissreg:mainContent:id_txf_nizza_class", ""], # Nizza Klassifikation Nr.
       #      ["id_swissreg:mainContent:id_txf_appDate", timespan], # Hinterlegungsdatum
+            ["id_swissreg:mainContent:id_txf_appDate", timespan] ,
             ["id_swissreg:mainContent:id_txf_expiryDate", ""], # Ablauf Schutzfrist
             # Markenart: Individualmarke 1 Kollektivmarke 2 Garantiemarke 3
             ["id_swissreg:mainContent:id_cbxTMTypeGrp", "_ALL"],  # Markenart
             ["id_swissreg:mainContent:id_cbxTMForm", "_ALL"],  # Markentyp
             ["id_swissreg:mainContent:id_cbxTMColorClaim", "_ALL"],  # Farbanspruch
             ["id_swissreg:mainContent:id_txf_pub_date", ""], # Publikationsdatum
-      #      name="id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_applicant"], # />&#160;Inhaber/in</label></td>
             
           # info zu Publikationsgrund id_swissreg:mainContent:id_ckbTMPubReason
             ["id_swissreg:mainContent:id_ckbTMPubReason", "1"], #Neueintragungen
@@ -128,57 +164,28 @@ module Brand2csv
             ["id_swissreg:mainContent:id_ckbTMPubReason", "6"], #Vertreteränderungen
             ["id_swissreg:mainContent:id_ckbTMPubReason", "7"], #Lizenzänderungen
             ["id_swissreg:mainContent:id_ckbTMPubReason", "8"], #Weitere Registeränderungen
-            ["id_swissreg:mainContent:id_ckbTMEmptyHits", "0"],  # Leere Trefferliste anzeigen
-            
-            # Angezeigte Spalten "id_swissreg:mainContent:id_ckbTMChoice"
-            ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_tm_text"], # Marke
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_state"], # Status
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_nizza_class"], # Nizza Klassifikation Nr.
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_no"], # disabled="disabled"], # Nummer
-            ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_applicant"], # Inhaber/in
-            ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_country"], # Land (Inhaber/in)
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_agent"], # Vertreter/in
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_licensee"], # Lizenznehmer/in
-            ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_app_date"], # Hinterlegungsdatum
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_expiry_date"], # Ablauf Schutzfrist
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_type_grp"], # Markenart
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_form"], # Markentyp
-            # ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_color_claim"], # Farbanspruch
-            
-            ["id_swissreg:mainContent:id_cbxHitsPerPage", "100"],   # Treffer pro Seite
-            ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_applicant"],
-            ["id_swissreg:mainContent:sub_fieldset:id_submit", "suchen"],
-      #      ["id_swissreg:mainContent:sub_fieldset:id_reset", "0"],
-            ["id_swissreg_SUBMIT", "1"],
-            ["javax.faces.ViewState", state],
+#            ["id_swissreg:mainContent:id_ckbTMEmptyHits", "0"],  # Leere Trefferliste anzeigen
+                        
+            # "id_swissreg:mainContent:id_cbxFormatChoice" 2 = Publikationsansicht 1 = Registeransicht
+            ["id_swissreg:mainContent:id_cbxFormatChoice", "1"],
+            ["id_swissreg:mainContent:id_cbxHitsPerPage", @hitsPerPage],   # Treffer pro Seite
           ]
-          if marke               # Wortlaut der Marke
-            puts "Marke ist #{marke}"
-          criteria << ["id_swissreg:mainContent:id_txf_tm_text", marke]
-          else
-            puts "Keine Marke spezifiziert. #{marke.inspect}" if $VERBOSE
-          criteria << ["id_swissreg:mainContent:id_txf_tm_text", ""]
-          end
-          if timespan               # Hinterlegungsdatum
-            puts "Hinterlegungsdatum ist #{timespan}"  if $VERBOSE
-            criteria << ["id_swissreg:mainContent:id_txf_appDate", timespan] # Hinterlegungsdatum
-          else
-            puts "Keine Hinterlegungsdatum spezifiziert. #{timespan.inspect}"
-            criteria << ["id_swissreg:mainContent:id_txf_appDate", ""] # Hinterlegungsdatum
-          end
-          if nummer               
-            puts "nummer ist #{timespan}"
-            criteria << ["id_swissreg:mainContent:id_txf_tm_no", nummer] 
-          else
-            puts "Keine nummer spezifiziert. #{timespan.inspect}"   if $VERBOSE
-            criteria << ["id_swissreg:mainContent:id_txf_tm_no", ""] 
-          end
+          TMChoiceFields.each{ | field2display| @criteria << ["id_swissreg:mainContent:id_ckbTMChoice", field2display] }
+                                                             # id_swissreg:mainContent:id_ckbTMChoice  tm_lbl_tm_text
+          puts "Marke ist #{marke}" if marke               # Wortlaut der Marke
+          puts "Hinterlegungsdatum ist #{timespan}"  if $VERBOSE and timespan   
+          puts "nummer ist #{timespan}" if nummer
+          @criteria <<   ["id_swissreg:mainContent:sub_fieldset:id_submit", "suchen"]
+          @criteria <<    ["id_swissreg_SUBMIT", "1"]
+          @criteria <<    ["id_swissreg:_idcl", ""]
+          @criteria <<    ["id_swissreg:_link_hidden_", ""]
+          @criteria <<    ["javax.faces.ViewState", @state]
           
-      path = "/srclient/faces/jsp/trademark/sr3.jsp"
-      response = @agent.post(Base_uri + path, criteria)
+      @path = "/srclient/faces/jsp/trademark/sr3.jsp"
+      response = @agent.post(Base_uri + @path, @criteria)
       writeResponse('mechanize/resultate_1.html', response.body)
-      criteria<<['id_swissreg:mainContent:scroll_1idx2', 'idx2']
-      @lastResponse = response.body
+      checkErrors(response.body)
+      @lastResponse = response
     end
 
     def parseAddress(nummer, inhaber)
@@ -241,13 +248,24 @@ module Brand2csv
       }
     end
 
-    def fetchresult(filename = nil)
+    def fetchresult(filename = nil, counter = 1)
       if filename
         doc = Nokogiri::Slop(File.open(filename))        
       else
-       doc = Nokogiri::Slop(@lastResponse)
+       doc = Nokogiri::Slop(@lastResponse.body)
       end
       nrFailures = 0
+      counter += 1
+      puts "fetchresult. Counter #{counter} already #{@results.size} Datensätze für die Zeitspanne '#{@timespan}'"
+      path_name = "//html/body/form/div/div/fieldset/table/tbody/tr/td/table/tr/td"
+      hasNext = false
+      doc.xpath(path_name).each{ 
+        |elem|
+        if /scroll_1idx#{counter}/.match(elem.to_s)
+          hasNext = true
+          break
+        end
+      }
       path_name = "//html/body/form/div/div/fieldset/table/tbody/tr/td/table/tbody/tr"
       doc.xpath(path_name).each{ 
         |elem|
@@ -268,9 +286,31 @@ module Brand2csv
           @errors[nummer] = Marke.new(bezeichnung, elem.elements[2].text,  elem.elements[3].text,  land,  elem.elements[5].text,
                                 zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort )
         end
-      }
-      puts "Es gab #{nrFailures} Fehler beim lesen von #{filename}"  if $VERBOSE
-      puts "Fand #{@results.size} Datensätze für die Zeitspanne '#{@timespan}'. Von #{@errors.size} muss die Adresse noch geholt werden."
+      } if doc.xpath(path_name)
+      if hasNext
+        @path = "/srclient/faces/jsp/trademark/sr30.jsp"
+        puts "Calling sub #{counter} with #{@path}" if $VERBOSE
+        data = [
+          ["autoScroll", "0,0"],
+          ["id_swissreg:mainContent:id_sub_options_result:sub_fieldset:id_cbxHitsPerPage", @hitsPerPage],
+#          ["id_swissreg:mainContent:vivian", "TRADEMARK REGISTER SEARCH TIMES: QUERY=[20] SELECT=[823] SERVER=[846] DELEGATE=[861] (HITS=[96])"],
+          ["id_swissreg_SUBMIT", "1"],
+          ["id_swissreg:_idcl",   "id_swissreg:mainContent:scroll_1idx#{counter}"],
+          ["id_swissreg:mainContent:scroll_1", "idx#{counter}"],
+          ["tmMainId", ""],
+          ["id_swissreg:_link_hidden_ "],
+          ["javax.faces.ViewState", @state],
+        ]
+        TMChoiceFields.each{ | field2display| data << ["id_swissreg:mainContent:id_sub_options_result:id_ckbTMChoice", field2display] }
+        response = @agent.post(Base_uri + @path, data)
+        writeResponse("mechanize/resultate_#{counter}.html", response.body)
+        checkErrors(response.body)
+        @lastResponse = response
+        fetchresult(nil, counter)
+      else
+        puts "Es gab #{nrFailures} Fehler beim Lesen von #{filename}"  if $VERBOSE
+        puts "Fand #{@results.size} Datensätze für die Zeitspanne '#{@timespan}'. Von #{@errors.size} muss die Adresse noch geholt werden."
+      end
     end
 
     def emitCsv(filename='ausgabe.csv')

@@ -1,7 +1,11 @@
+=== 0.1.1 / 21.05.2013
+
+*  Fetches as many records as possible
+*  Still don't why id_swissreg:mainContent:id_txf_appDate (Hinterlegungsdatum) is not honored
+
 === 0.1 / 21.05.2013
 
 *  First release. Does not handle timespan correctly
-*  Reads only the first 100 records
 *  Saves only "Inhaber" with an address inside Switzerland (by design)
 
 
