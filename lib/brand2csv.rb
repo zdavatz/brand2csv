@@ -42,6 +42,8 @@ module Brand2csv
             "tm_lbl_app_date", # Hinterlegungsdatum
             ]
 
+    MaxZeilen = 5
+    
     attr_accessor :marke
     
     def initialize(timespan)
@@ -188,27 +190,44 @@ module Brand2csv
       @lastResponse = response
     end
 
-    def parseAddress(nummer, inhaber)
-      zeile_1, zeile_2, zeile_3, zeile_4, zeile_5 = inhaber.split(LineSplit)
+    def parseAddress(nummer, zeilen)
       ort = nil
       plz = nil
-      if    m = AddressRegexp.match(zeile_2)
-        zeile_2 = nil
-        plz = m[1]; ort = m[2]
-      elsif m = AddressRegexp.match(zeile_3)
-        zeile_3 = nil
-        plz = m[1]; ort = m[2]
-      elsif m = AddressRegexp.match(zeile_4)
-        zeile_4 = nil
-        plz = m[1]; ort = m[2]
-      elsif m = AddressRegexp.match(zeile_5)
-        zeile_5 = nil
-        plz = m[1]; ort = m[2]
-      else
-        puts "Achtung! Konnte Marke #{nummer} mit Inhaber #{inhaber} nicht parsen" if $VERBOSE
+      
+      # Search for plz/address
+      1.upto(zeilen.length-1).each  {
+        |cnt|
+         if    m = AddressRegexp.match(zeilen[cnt])
+          zeilen[cnt+1] = nil
+          plz = m[1]; ort = m[2]
+          cnt.upto(MaxZeilen-1).each{ |cnt2| zeilen[cnt2] = nil }
+          break
+        end
+      }
+      unless plz
+        puts "Achtung! Konnte Marke #{nummer} mit Inhaber #{zeilen.inpsect} nicht parsen" if $VERBOSE
         return nil,   nil,     nil,     nil,     nil,     nil,     nil, nil
       end
-      return zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort
+      # search for lines with only digits
+      found = false
+      1.upto(zeilen.length-1).each  {
+        |cnt|
+          break if zeilen[cnt] == nil
+          if /^\d*$/.match(zeilen[cnt])
+            found = true
+            if zeilen[cnt+1] == nil
+              found = 'before'
+              zeilen[cnt-1] += LineSplit + zeilen[cnt]
+              zeilen.delete_at(cnt)
+            else
+              found = 'after'
+              zeilen[cnt] += LineSplit + zeilen[cnt+1]
+              zeilen.delete_at(cnt+1)
+            end
+          end        
+      }
+      puts "found #{found}: #{zeilen.inspect}" if found # and $VERBOSE
+      return zeilen[0], zeilen[1], zeilen[2], zeilen[3], zeilen[4], plz, ort
     end
 
     def fetchDetails(nummer) # takes a long time!
@@ -223,7 +242,7 @@ module Brand2csv
         writeResponse("mechanize/detail_#{nummer}.html", content)
         doc = Nokogiri::Slop(content)
       end
-      puts "Bitte um Geduld. Hole Adressdetails für Marke #{nummer}. (#{@counterDetails} von #{@errors.size})"
+      puts "Bitte um Geduld. Holte Adressdetails für Marke #{nummer}. (#{@counterDetails} von #{@errors.size})"
       path_name = "//html/body/form/div/div/fieldset/div/table/tbody/tr/td"
       counter = 0
       doc.xpath(path_name).each{ 
@@ -232,15 +251,15 @@ module Brand2csv
           counter += 1
           next unless /^inhaber/i.match(td.text)
           zeilen = []
-          doc.xpath(path_name)[counter].children.each{ |child| zeilen << child.text.gsub(LineSplit,'. ') unless child.text.length == 0 } # avoid adding <br>
+          doc.xpath(path_name)[counter].children.each{ |child| zeilen << child.text unless child.text.length == 0 } # avoid adding <br>
           if info = @errors[nummer]
-            info.inhaber = zeilen.join(LineSplit)
-            info.zeile_1, info.zeile_2, info.zeile_3, info.zeile_4, zeile_5, info.plz, info.ort = parseAddress(nummer, info.inhaber)
+            info.inhaber = zeilen.join(" ")
+            info.zeile_1, info.zeile_2, info.zeile_3, info.zeile_4, zeile_5, info.plz, info.ort = parseAddress(nummer, zeilen)
             @results << info
           else
             bezeichnung =  doc.xpath(path_name)[15]
-            inhaber = zeilen.join(LineSplit)
-            zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = parseAddress(nummer, inhaber)
+            inhaber = zeilen.join(" ")
+            zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = parseAddress(nummer, zeilen)
             hinterlegungsdatum = doc.xpath(path_name)[7]
             marke = Marke.new(bezeichnung, nummer,  inhaber,  DefaultCountry,  hinterlegungsdatum, zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort )
             @results << marke
@@ -256,7 +275,7 @@ module Brand2csv
       end
       nrFailures = 0
       counter += 1
-      puts "fetchresult. Counter #{counter} already #{@results.size} Datensätze für die Zeitspanne '#{@timespan}'"
+      puts "fetchresult. Counter #{counter} already #{@results.size} Datensätze für die Zeitspanne '#{@timespan}'" if $VERBOSE
       path_name = "//html/body/form/div/div/fieldset/table/tbody/tr/td/table/tr/td"
       hasNext = false
       doc.xpath(path_name).each{ 
@@ -277,7 +296,7 @@ module Brand2csv
         if bezeichnung.length == 0
           bezeichnung = elem.children[1].children[0].children[0].children[0].attribute('src').to_s
         end
-        zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = parseAddress(nummer, inhaber)
+        zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = parseAddress(nummer, inhaber.split(LineSplit))
         if zeile_1
           @results << Marke.new(bezeichnung, elem.elements[2].text,  elem.elements[3].text,  land,  elem.elements[5].text,
                                 zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort )
