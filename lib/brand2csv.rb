@@ -226,7 +226,7 @@ module Brand2csv
             end
           end        
       }
-      puts "found #{found}: #{zeilen.inspect}" if found # and $VERBOSE
+      puts "found #{found}: #{zeilen.inspect}" if found and $VERBOSE
       return zeilen[0], zeilen[1], zeilen[2], zeilen[3], zeilen[4], plz, ort
     end
 
