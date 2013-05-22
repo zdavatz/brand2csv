@@ -316,7 +316,9 @@ module Brand2csv
     def emitCsv(filename='ausgabe.csv')
       return if @results.size == 0
       CSV.open(filename,  'w', {:headers=>@results[0].members,
-                                :write_headers => true}) do |csv|
+                                :write_headers => true,
+                                :col_sep => ';',
+                               }) do |csv|
         @results.each{ |x| csv << x }
       end
       puts "Speicherte #{@results.size} gefunden Datensätze für die Zeitspanne '#{@timespan}' in #{filename}"
@@ -335,7 +337,7 @@ module Brand2csv
     session.parse_swissreg
     session.fetchresult
     session.fetchMissingDetails
-    session.emitCsv
+    session.emitCsv("#{timespan}.csv")
   end
   
 end # module Brand2csv
