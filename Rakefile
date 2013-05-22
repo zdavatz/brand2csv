@@ -4,7 +4,7 @@
 require 'rubygems'
 require 'hoe'
 
-Hoe.spec 'brand2csv' do
+Hoe.spec "brand2csv" do
   self.author      = "Niklaus Giger, Zeno R.R. Davatz" # gem.authors
   self.email       = "yasaka@ywesee.com, zdavatz@ywesee.com"
   self.description = "brand2csv creates csv files for swiss brand registered in a specific time period. 
