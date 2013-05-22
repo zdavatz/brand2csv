@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+root = Pathname.new(__FILE__).realpath.parent.parent
+$:.unshift root.join('lib') if $0 == __FILE__
+
+require 'optparse'
+require 'brand2csv'
+
+def help
+  <<EOS
+#$0 ver.#{Brand2csv::VERSION}
+Usage:
+  #{File.basename(__FILE__)} timespan
+    Find all brands registered in switzerland during the given timespan.
+    The following examples valid timespan periods:
+      1.10.2005
+      1.10.2005-31.10.2005
+      1.10.2005, 5.10.2005-31.10.2005
+    The results are stored in the file ausgabe.csv.
+    The trademark name is either a real brand name or a link to an image.
+EOS
+end
+
+parser = OptionParser.new
+opts = {}
+parser.on_tail('-h', '--help') { puts help; exit }
+
+args = ARGV.dup
+begin
+  parser.parse!(args)
+rescue OptionParser::MissingArgument,
+       OptionParser::InvalidArgument,
+       OptionParser::InvalidOption
+  puts help
+  exit 1
+end
+
+
+unless args.size == 1
+  puts help
+  exit 1  
+end
+
+begin
+  Brand2csv::run(args[0])
+rescue Interrupt
+  puts "Unterbrochen. Breche mit Fehler ab"
+  exit 1
+end
+
+puts "#{__FILE__} completed successfully" if $VERBOSE
