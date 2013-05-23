@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-
+require 'rubygems' if /^1\.8/.match(RUBY_VERSION)
 require "brand2csv/version"
 require 'mechanize'
 require 'prettyprint'
@@ -84,11 +84,12 @@ module Brand2csv
     end
 
     def view_state(response)
-      if match = /javax.faces.ViewState.*?value="([^"]+)"/u.match(response.force_encoding('utf-8'))
-        match[1]
+      if /^1\.8/.match(RUBY_VERSION)
+        match = /javax.faces.ViewState.*?value="([^"]+)"/u.match(response)
       else
-        ""
+        match = /javax.faces.ViewState.*?value="([^"]+)"/u.match(response.force_encoding('utf-8'))
       end
+      match ? match[1] : ""
     end
 
     def checkErrors(body)
@@ -334,15 +335,36 @@ module Brand2csv
 
     def emitCsv(filename='ausgabe.csv')
       return if @results.size == 0
-      CSV.open(filename,  'w', {:headers=>@results[0].members,
-                                :write_headers => true,
-                                :col_sep => ';',
-                               }) do |csv|
-        @results.each{ |x| csv << x }
+      if /^1\.8/.match(RUBY_VERSION)
+        ausgabe = File.open(filename, 'w+')
+        # Write header
+        s=''
+        @results[0].members.each { |member| s += member + ';' }
+        ausgabe.puts s.chop
+        # write all line
+        @results.each{ 
+          |result| 
+            s = ''
+            result.members.each{ |member| 
+                                  unless eval("result.#{member}") 
+                                    s += ';'
+                                  else
+                                    value = eval("result.#{member.to_s}")
+                                    value = '"' + value +'"' if value.index(';')
+                                    s += value + ';' 
+                                  end
+                               }
+            ausgabe.puts s.chop
+        }        
+      else
+        CSV.open(filename,  'w', :headers=>@results[0].members,
+                                  :write_headers => true,
+                                  :col_sep => ';'
+                                ) do |csv| @results.each{ |x| csv << x }
+        end
       end
-      puts "Speicherte #{@results.size} gefunden Datensätze für die Zeitspanne '#{@timespan}' in #{filename}"
     end
-    
+      
     def fetchMissingDetails
       @errors.each{ 
         |markennummer, info|
