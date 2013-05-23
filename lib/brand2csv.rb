@@ -38,11 +38,44 @@ module Brand2csv
             # "tm_lbl_no"], # disabled="disabled"], # Nummer
             "tm_lbl_applicant", # Inhaber/in
             "tm_lbl_country", # Land (Inhaber/in)
-            "tm_lbl_agent", # Vertreter/in
+            # "tm_lbl_agent", # Vertreter/in
             # "tm_lbl_licensee"], # Lizenznehmer/in
             "tm_lbl_app_date", # Hinterlegungsdatum
             ]
+    # Alle Felder mit sprechenden Namen
+    # ["id_swissreg:mainContent:id_txf_tm_no", nummer],# Marken Nr
+    # ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
+    # ["id_swissreg:mainContent:id_txf_tm_text", marke],
+    # ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
+    # ["id_swissreg:mainContent:id_cbxCountry", "_ALL"], # Auswahl Länder _ALL
+    # ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
+    # ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
+    # ["id_swissreg:mainContent:id_txf_nizza_class", ""], # Nizza Klassifikation Nr.
+    #      # ["id_swissreg:mainContent:id_txf_appDate", timespan], # Hinterlegungsdatum
+    # ["id_swissreg:mainContent:id_txf_appDate",  "%s" % timespan] ,
+    # ["id_swissreg:mainContent:id_txf_expiryDate", ""], # Ablauf Schutzfrist
+    # Markenart: Individualmarke 1 Kollektivmarke 2 Garantiemarke 3
+    # ["id_swissreg:mainContent:id_cbxTMTypeGrp", "_ALL"],  # Markenart
+    # ["id_swissreg:mainContent:id_cbxTMForm", "_ALL"],  # Markentyp
+    # ["id_swissreg:mainContent:id_cbxTMColorClaim", "_ALL"],  # Farbanspruch
+    # ["id_swissreg:mainContent:id_txf_pub_date", ""], # Publikationsdatum
 
+    # info zu Publikationsgrund id_swissreg:mainContent:id_ckbTMPubReason
+    # ["id_swissreg:mainContent:id_ckbTMPubReason", "1"], #Neueintragungen
+    # ["id_swissreg:mainContent:id_ckbTMPubReason", "2"], #Berichtigungen
+    # ["id_swissreg:mainContent:id_ckbTMPubReason", "3"], #Verlängerungen
+    # ["id_swissreg:mainContent:id_ckbTMPubReason", "4"], #Löschungen
+    # ["id_swissreg:mainContent:id_ckbTMPubReason", "5"], #Inhaberänderungen
+    # ["id_swissreg:mainContent:id_ckbTMPubReason", "6"], #Vertreteränderungen
+    # ["id_swissreg:mainContent:id_ckbTMPubReason", "7"], #Lizenzänderungen
+    # ["id_swissreg:mainContent:id_ckbTMPubReason", "8"], #Weitere Registeränderungen
+    # ["id_swissreg:mainContent:id_ckbTMEmptyHits", "0"],  # Leere Trefferliste anzeigen
+    # ["id_swissreg:mainContent:id_ckbTMState", "1"], # "Hängige Gesuche 1
+    #      # ["id_swissreg:mainContent:id_ckbTMState", "2"], # "Gelöschte Gesuche 2
+    # ["id_swissreg:mainContent:id_ckbTMState", "3"], # aktive Marken 3 
+    #      # ["id_swissreg:mainContent:id_ckbTMState", "4"], # gelöschte Marken 4
+
+    
     MaxZeilen = 5
     
     attr_accessor :marke
@@ -51,16 +84,16 @@ module Brand2csv
       @timespan = timespan
       @marke = nil
       @number = nil
-      @hitsPerPage = 25
+      @hitsPerPage = 100
       
       @agent = Mechanize.new { |agent|
         agent.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:16.0) Gecko/20100101 Firefox/16.0'
         agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        agent.log = Logger.new(STDOUT) if $VERBOSE
+        FileUtils.makedirs 'mechanize' if $VERBOSE
+        agent.log = Logger.new("mechanize/mechanize.log") if $VERBOSE
       }
       @results = []
       @errors  = Hash.new
-      @lastResponse = nil
       @lastDetail =nil
       @counterDetails = 0
       if false # force some values
@@ -76,12 +109,13 @@ module Brand2csv
   #      @marke = "*WEIH*"
         @timespan = nil
       end
+      @marke = 'asp*'
     end
     
-    def writeResponse(filename, body)
+    def writeResponse(filename)
       if defined?(RSpec) or $VERBOSE
         ausgabe = File.open(filename, 'w+')
-        ausgabe.puts body
+        ausgabe.puts @agent.page.body
         ausgabe.close
       else
         puts "Skipping writing #{filename}" if $VERBOSE
@@ -110,13 +144,13 @@ module Brand2csv
     def parse_swissreg(timespan = @timespan,  # sollte 377 Treffer ergeben, für 01.06.2007-10.06.2007, 559271 wurde in diesem Zeitraum registriert
                       marke = @marke,    
                       nummer =@number) #  nummer = "559271" ergibt genau einen treffer
+
       # discard this first response
       # swissreg.ch could not handle cookie by redirect.
       # HTTP status code is also strange at redirection.
       @agent.get Start_uri  # get a cookie for the session
       content = @agent.get_file Start_uri
-      FileUtils.makedirs 'mechanize'
-      writeResponse('mechanize/main.html', content)
+      writeResponse('mechanize/start.jsp')
       # get only view state
       @state = view_state(content)
       data = [
@@ -126,10 +160,12 @@ module Brand2csv
         ["id_swissreg:_idcl", "id_swissreg_sub_nav_ipiNavigation_item0"],
         ["javax.faces.ViewState", @state],
       ]
-
+      
       content = @agent.post(Start_uri, data)  
-      writeResponse('mechanize/einfache_suche.html', content.body)
-
+      writeResponse('mechanize/start2.jsp')
+      # Navigation with mechanize like this fails and returns to the home page
+      # @agent.page.link_with(:id => "id_swissreg_sub_nav_ipiNavigation_item0").click
+      
       data = [
         ["autoScroll", "0,0"],
         ["id_swissreg:_link_hidden_", ""],
@@ -140,64 +176,52 @@ module Brand2csv
       # sr1 ist die einfache suche, sr3 die erweiterte Suche
       @path = "/srclient/faces/jsp/trademark/sr3.jsp"
       response = @agent.post(Base_uri + @path, data)
-      writeResponse('mechanize/erweiterte_suche.html', response.body)
-      # Bis hier alles okay
-          @criteria = [
-            ["autoScroll", "0,981"],
-            ["id_swissreg:mainContent:id_txf_tm_no", nummer],# Marken Nr
-            ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
-            ["id_swissreg:mainContent:id_txf_tm_text", marke],
-            ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
-            ["id_swissreg:mainContent:id_cbxCountry", "_ALL"], # Auswahl Länder _ALL
-            ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
-            ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
-            ["id_swissreg:mainContent:id_txf_nizza_class", ""], # Nizza Klassifikation Nr.
-      #      ["id_swissreg:mainContent:id_txf_appDate", timespan], # Hinterlegungsdatum
-            ["id_swissreg:mainContent:id_txf_appDate",  "%s" % timespan] ,
-            ["id_swissreg:mainContent:id_txf_expiryDate", ""], # Ablauf Schutzfrist
-            # Markenart: Individualmarke 1 Kollektivmarke 2 Garantiemarke 3
-            ["id_swissreg:mainContent:id_cbxTMTypeGrp", "_ALL"],  # Markenart
-            ["id_swissreg:mainContent:id_cbxTMForm", "_ALL"],  # Markentyp
-            ["id_swissreg:mainContent:id_cbxTMColorClaim", "_ALL"],  # Farbanspruch
-            ["id_swissreg:mainContent:id_txf_pub_date", ""], # Publikationsdatum
-            
-          # info zu Publikationsgrund id_swissreg:mainContent:id_ckbTMPubReason
-            ["id_swissreg:mainContent:id_ckbTMPubReason", "1"], #Neueintragungen
-            ["id_swissreg:mainContent:id_ckbTMPubReason", "2"], #Berichtigungen
-            ["id_swissreg:mainContent:id_ckbTMPubReason", "3"], #Verlängerungen
-            ["id_swissreg:mainContent:id_ckbTMPubReason", "4"], #Löschungen
-            ["id_swissreg:mainContent:id_ckbTMPubReason", "5"], #Inhaberänderungen
-            ["id_swissreg:mainContent:id_ckbTMPubReason", "6"], #Vertreteränderungen
-            ["id_swissreg:mainContent:id_ckbTMPubReason", "7"], #Lizenzänderungen
-            ["id_swissreg:mainContent:id_ckbTMPubReason", "8"], #Weitere Registeränderungen
-#            ["id_swissreg:mainContent:id_ckbTMEmptyHits", "0"],  # Leere Trefferliste anzeigen
-                        
-            ["id_swissreg:mainContent:id_ckbTMState", "1"], # "Hängige Gesuche 1
-      #      ["id_swissreg:mainContent:id_ckbTMState", "2"], # "Gelöschte Gesuche 2
-            ["id_swissreg:mainContent:id_ckbTMState", "3"], # aktive Marken 3 
-      #      ["id_swissreg:mainContent:id_ckbTMState", "4"], # gelöschte Marken 4
+      writeResponse('mechanize/sr3.jsp')
+      
+      # Fill out form values
+      @agent.page.form('id_swissreg').checkboxes.each{ |box| 
+                                  TMChoiceFields.index(box.value) ? box.check : box.uncheck 
+                                  box.check if $VERBOSE
+                                  # select all publication reasons
+                                  box.check if /id_ckbTMPubReason/.match(box.name)
+                                  # select all publication states
+                                  box.check if /id_ckbTMState/.match(box.name)
+                                }
+      if $VERBOSE # and false # fill all details for marke  567120        
+        # Felder, welche nie bei der Antwort auftauchen
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_licensee') { |x| x.value = 'BBB Inc*' }
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_expiryDate') { |x| x.value = timespan }
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_pub_date') { |x| x.value = timespan }
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_nizza_class') { |x| x.value = '9' }      
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_agent') { |x| x.value = 'Marc Stucki*' }
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_cbxCountry') { |x| x.value = 'CH' }  # 'CH' or '_ALL'
 
-            # "id_swissreg:mainContent:id_cbxFormatChoice" 2 = Publikationsansicht 1 = Registeransicht
-            ["id_swissreg:mainContent:id_cbxFormatChoice", "1"],
-            ["id_swissreg:mainContent:id_cbxHitsPerPage", @hitsPerPage],   # Treffer pro Seite
-          ]
-          TMChoiceFields.each{ | field2display| @criteria << ["id_swissreg:mainContent:id_ckbTMChoice", field2display] }
-                                                             # id_swissreg:mainContent:id_ckbTMChoice  tm_lbl_tm_text
-          puts "Marke ist #{marke}" if marke               # Wortlaut der Marke
-          puts "Hinterlegungsdatum ist #{timespan}"  if $VERBOSE and timespan   
-          puts "nummer ist #{timespan}" if nummer
-          @criteria <<   ["id_swissreg:mainContent:sub_fieldset:id_submit", "suchen"]
-          @criteria <<    ["id_swissreg_SUBMIT", "1"]
-          @criteria <<    ["id_swissreg:_idcl", ""]
-          @criteria <<    ["id_swissreg:_link_hidden_", ""]
-          @criteria <<    ["javax.faces.ViewState", @state]
-          
-          pp @criteria
-      @path = "/srclient/faces/jsp/trademark/sr3.jsp"
-      response = @agent.post(Base_uri + @path, @criteria)
-      writeResponse('mechanize/resultate_1.html', response.body)
-      checkErrors(response.body)
-      @lastResponse = response
+        # Felder, welche im Resultat angezeigt werden
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_applicant') { |x| x.value = 'ASP ATON*' } #inhaber
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_tm_no') { |x| x.value = "567120" }
+        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_app_no') { |x| x.value = '50329/2008' }
+      end
+      
+      # Feld, welches im Resultat angezeigt wird
+      @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_tm_text') { |x| x.value = "asp*" }
+      
+      # Felder, welches nie bei der Antwort auftaucht. Ein Versuch .gsub('.', '%2E') schlug ebenfalls fehl!
+      @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_appDate') { |x| x.value = timespan}
+      
+      # Feld, welches ebenfalls berücksichtigt wird
+      @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_cbxHitsPerPage') { |x| x.value = @hitsPerPage }
+      @agent.page.form('id_swissreg').field(:name => 'autoScroll') { |x| x.value = '0,0' }
+      
+      if $VERBOSE
+        puts "State of searchForm is:"
+        @agent.page.form('id_swissreg').fields.each{ |f| puts "field: #{f.name}: #{f.value}"}  
+        @agent.page.form('id_swissreg').checkboxes.each{ |box| puts "#{box.name} checked? #{box.checked}"} 
+      end
+      
+      @agent.page.form('id_swissreg').click_button(@agent.page.form('id_swissreg').button_with(:value => "suchen"))
+      # Hier sollten eigentlich alle Felder auftauchen, wie
+      # Marke=asp*; Land (Inhaber/in)=Schweiz; Markenart=Alle; Markentyp=Alle; Farbanspruch=Alle; Publikationsgrund= Neueintragungen, Berichtigungen, Verlängerungen, Löschungen, Inhaberänderungen, Vertreteränderungen, Lizenzänderungen, Weitere Registeränderungen; Status= hängige Gesuche, aktive Marken
+      writeResponse('mechanize/result.jsp')
     end
 
     def parseAddress(nummer, zeilen)
@@ -249,7 +273,7 @@ module Brand2csv
         url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=#{nummer}"
         pp "Opening #{url}" if $VERBOSE
         content = @agent.get_file url
-        writeResponse("mechanize/detail_#{nummer}.html", content)
+        writeResponse("mechanize/detail_#{nummer}.html")
         doc = Nokogiri::Slop(content)
       end
       puts "Bitte um Geduld. Holte Adressdetails für Marke #{nummer}. (#{@counterDetails} von #{@errors.size})"
@@ -281,7 +305,7 @@ module Brand2csv
       if filename
         doc = Nokogiri::Slop(File.open(filename))        
       else
-        body = @lastResponse.body
+        body = @agent.page.body
         body.force_encoding('utf-8')
         doc = Nokogiri::Slop(body)
       end
@@ -334,9 +358,8 @@ module Brand2csv
         ]
         TMChoiceFields.each{ | field2display| data << ["id_swissreg:mainContent:id_sub_options_result:id_ckbTMChoice", field2display] }
         response = @agent.post(Base_uri + @path, data)
-        writeResponse("mechanize/resultate_#{counter}.html", response.body)
+        writeResponse("mechanize/resultate_#{counter}.html")
         checkErrors(response.body)
-        @lastResponse = response
         fetchresult(nil, counter)
       else
         puts "Es gab #{nrFailures} Fehler beim Lesen von #{filename}"  if $VERBOSE

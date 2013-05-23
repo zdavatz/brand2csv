@@ -12,6 +12,30 @@ Trimmed script for more logging in VERBOSE mode. Therefore to debug I always cal
 ** Content of POST-Data via mechanize and HttpFox (identical except)
 ** Tagged this commit as "POST_verified"
 
+*"Cheetsheet":http://www.e-tobi.net/blog/files/ruby-mechanize-cheat-sheet.pdf
+
+Found, that the following fields are handled correctly
+# id_txf_applicant' #inhaber
+# id_txf_tm_no # Markn-Nummber
+# id_txf_app_no # Gesuch-nummer 
+# id_txf_tm_text # text of trademark
+# id_cbxHitsPerPage 
+
+Fields, which are not handled and don't influence the response
+# id_txf_appDate # Hinterlegungsdatum
+# id_txf_licensee 
+# id_txf_expiryDate
+# id_txf_pub_date
+# id_txf_nizza_class
+# id_txf_agent        # Vertreter
+# id_cbxCountry       # Land 'CH' or '_ALL'
+
+* Reworked the brand2csv.rb to match more closely the interactive
+Checked differences in received fields from mechanize and interactive uses (in subdirectory logs)
+* start.jsp: Match okay
+* start2.jsp: Match okay
+* sr3.jsp: are quite different
+
 * Work on 2013.05.21
 
 * Added spike_mechanize_swissreg.rb
