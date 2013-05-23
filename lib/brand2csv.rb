@@ -6,6 +6,7 @@ require 'mechanize'
 require 'prettyprint'
 require 'optparse'
 require 'csv'
+require 'logger'
 
 module Brand2csv
 
@@ -17,12 +18,12 @@ module Brand2csv
       # Weitere gesehene Fehler
     BekannteFehler = 
           ['Das Datum ist ung', # ültig'
-           'Erweiterte Suche',
            'Vereinfachte Trefferliste anzeigen',
             'Es wurden keine Daten gefunden.',
             'Die Suchkriterien sind teilweise unzul', # ässig',
             'Geben Sie mindestens ein Suchkriterium ein',
             'Die Suche wurde abgebrochen, da die maximale Suchzeit von 60 Sekunden',
+           'Erweiterte Suche',
           ]
     Base_uri = 'https://www.swissreg.ch'
     Start_uri = "#{Base_uri}/srclient/faces/jsp/start.jsp"
@@ -37,7 +38,7 @@ module Brand2csv
             # "tm_lbl_no"], # disabled="disabled"], # Nummer
             "tm_lbl_applicant", # Inhaber/in
             "tm_lbl_country", # Land (Inhaber/in)
-            # "tm_lbl_agent", # Vertreter/in
+            "tm_lbl_agent", # Vertreter/in
             # "tm_lbl_licensee"], # Lizenznehmer/in
             "tm_lbl_app_date", # Hinterlegungsdatum
             ]
@@ -48,33 +49,37 @@ module Brand2csv
     
     def initialize(timespan)
       @timespan = timespan
+      @marke = nil
+      @number = nil
+      @hitsPerPage = 25
+      
       @agent = Mechanize.new { |agent|
-      #  agent.user_agent_alias = 'Mac Safari'
         agent.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:16.0) Gecko/20100101 Firefox/16.0'
-      #  agent.redirection_limit   = 5
         agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        agent.log = Logger.new(STDOUT) if $VERBOSE
       }
       @results = []
       @errors  = Hash.new
       @lastResponse = nil
       @lastDetail =nil
       @counterDetails = 0
-      @marke = 'zzzyyzzzzyzzyz*' # => Fehlermeldung: Es wurden keine Daten gefunden
-      # asp* => 138 records werden geholt
-      # a* => Es wurden 25,490 Treffer gefunden. Davon werden 10000 zufällig ausgewählte Schutztitel angezeigt. Bitte schränken Sie Ihre Suche weiter ein.
-      #       Ab 501 Treffer wird eine vereinfachte Trefferliste angezeigt.  
-      # asp* => 138 records werden geholt
+      if false # force some values
+        # asp* => 138 records werden geholt
+        # a* => Es wurden 25,490 Treffer gefunden. Davon werden 10000 zufällig ausgewählte Schutztitel angezeigt. Bitte schränken Sie Ihre Suche weiter ein.
+        #       Ab 501 Treffer wird eine vereinfachte Trefferliste angezeigt.  
+        # asp* => 138 records werden geholt
 
-      @marke = nil # => Fehlermeldung: Geben Sie mindestens ein Suchkriterium ein
-      @marke = 'asp*' 
-      @number = '500000'
-      @number = nil
-#      @marke = "*WEIH*"
-      @hitsPerPage = 100
+        @marke = 'zzzyyzzzzyzzyz*' # => Fehlermeldung: Es wurden keine Daten gefunden
+        @marke = 'aspira' 
+        # @number = '500000' # für Weihnachten
+        @number = ' 601416' # für aspira
+  #      @marke = "*WEIH*"
+        @timespan = nil
+      end
     end
     
     def writeResponse(filename, body)
-      if defined?(RSpec)
+      if defined?(RSpec) or $VERBOSE
         ausgabe = File.open(filename, 'w+')
         ausgabe.puts body
         ausgabe.close
@@ -105,10 +110,14 @@ module Brand2csv
     def parse_swissreg(timespan = @timespan,  # sollte 377 Treffer ergeben, für 01.06.2007-10.06.2007, 559271 wurde in diesem Zeitraum registriert
                       marke = @marke,    
                       nummer =@number) #  nummer = "559271" ergibt genau einen treffer
+      # discard this first response
+      # swissreg.ch could not handle cookie by redirect.
+      # HTTP status code is also strange at redirection.
       @agent.get Start_uri  # get a cookie for the session
       content = @agent.get_file Start_uri
       FileUtils.makedirs 'mechanize'
       writeResponse('mechanize/main.html', content)
+      # get only view state
       @state = view_state(content)
       data = [
         ["autoScroll", "0,0"],
@@ -134,23 +143,17 @@ module Brand2csv
       writeResponse('mechanize/erweiterte_suche.html', response.body)
       # Bis hier alles okay
           @criteria = [
-            ["autoScroll", "0,829"],
-            ["id_swissreg:_link_hidden_", ""],
-            ["id_swissreg:mainContent:id_ckbTMState", "1"], # "Hängige Gesuche 1
-      #      ["id_swissreg:mainContent:id_ckbTMState", "2"], # "Gelöschte Gesuche 2
-            ["id_swissreg:mainContent:id_ckbTMState", "3"], # aktive Marken 3 
-      #      ["id_swissreg:mainContent:id_ckbTMState", "4"], # gelöschte Marken 4
-            ["id_swissreg:mainContent:id_cbxCountry", "_ALL"], # Auswahl Länder _ALL
-#            ["id_swissreg:mainContent:id_txf_tm_no", ""],  # Marken Nr
+            ["autoScroll", "0,981"],
             ["id_swissreg:mainContent:id_txf_tm_no", nummer],# Marken Nr
             ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
             ["id_swissreg:mainContent:id_txf_tm_text", marke],
             ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
+            ["id_swissreg:mainContent:id_cbxCountry", "_ALL"], # Auswahl Länder _ALL
             ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
             ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
             ["id_swissreg:mainContent:id_txf_nizza_class", ""], # Nizza Klassifikation Nr.
       #      ["id_swissreg:mainContent:id_txf_appDate", timespan], # Hinterlegungsdatum
-            ["id_swissreg:mainContent:id_txf_appDate", timespan] ,
+            ["id_swissreg:mainContent:id_txf_appDate",  "%s" % timespan] ,
             ["id_swissreg:mainContent:id_txf_expiryDate", ""], # Ablauf Schutzfrist
             # Markenart: Individualmarke 1 Kollektivmarke 2 Garantiemarke 3
             ["id_swissreg:mainContent:id_cbxTMTypeGrp", "_ALL"],  # Markenart
@@ -169,6 +172,11 @@ module Brand2csv
             ["id_swissreg:mainContent:id_ckbTMPubReason", "8"], #Weitere Registeränderungen
 #            ["id_swissreg:mainContent:id_ckbTMEmptyHits", "0"],  # Leere Trefferliste anzeigen
                         
+            ["id_swissreg:mainContent:id_ckbTMState", "1"], # "Hängige Gesuche 1
+      #      ["id_swissreg:mainContent:id_ckbTMState", "2"], # "Gelöschte Gesuche 2
+            ["id_swissreg:mainContent:id_ckbTMState", "3"], # aktive Marken 3 
+      #      ["id_swissreg:mainContent:id_ckbTMState", "4"], # gelöschte Marken 4
+
             # "id_swissreg:mainContent:id_cbxFormatChoice" 2 = Publikationsansicht 1 = Registeransicht
             ["id_swissreg:mainContent:id_cbxFormatChoice", "1"],
             ["id_swissreg:mainContent:id_cbxHitsPerPage", @hitsPerPage],   # Treffer pro Seite
@@ -184,6 +192,7 @@ module Brand2csv
           @criteria <<    ["id_swissreg:_link_hidden_", ""]
           @criteria <<    ["javax.faces.ViewState", @state]
           
+          pp @criteria
       @path = "/srclient/faces/jsp/trademark/sr3.jsp"
       response = @agent.post(Base_uri + @path, @criteria)
       writeResponse('mechanize/resultate_1.html', response.body)
@@ -198,15 +207,15 @@ module Brand2csv
       # Search for plz/address
       1.upto(zeilen.length-1).each  {
         |cnt|
-         if    m = AddressRegexp.match(zeilen[cnt])
-          zeilen[cnt+1] = nil
-          plz = m[1]; ort = m[2]
-          cnt.upto(MaxZeilen-1).each{ |cnt2| zeilen[cnt2] = nil }
-          break
-        end
+          if    m = AddressRegexp.match(zeilen[cnt])
+            zeilen[cnt+1] = nil
+            plz = m[1]; ort = m[2]
+            cnt.upto(MaxZeilen-1).each{ |cnt2| zeilen[cnt2] = nil }
+            break
+          end
       }
       unless plz
-        puts "Achtung! Konnte Marke #{nummer} mit Inhaber #{zeilen.inpsect} nicht parsen" if $VERBOSE
+        puts "Achtung! Konnte Marke #{nummer} mit Inhaber #{zeilen.inspect} nicht parsen" if $VERBOSE
         return nil,   nil,     nil,     nil,     nil,     nil,     nil, nil
       end
       # search for lines with only digits
@@ -272,7 +281,9 @@ module Brand2csv
       if filename
         doc = Nokogiri::Slop(File.open(filename))        
       else
-       doc = Nokogiri::Slop(@lastResponse.body)
+        body = @lastResponse.body
+        body.force_encoding('utf-8')
+        doc = Nokogiri::Slop(body)
       end
       nrFailures = 0
       counter += 1
@@ -350,7 +361,7 @@ module Brand2csv
                                     s += ';'
                                   else
                                     value = eval("result.#{member.to_s}")
-                                    value = '"' + value +'"' if value.index(';')
+                                    value = "\"#{value}\"" if value.index(';')
                                     s += value + ';' 
                                   end
                                }

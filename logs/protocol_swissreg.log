@@ -1,0 +1,86 @@
+Analyse Verkehr
+00:00:03.549 0.140 445 228 GET 200 text/html https://www.swissreg.ch/srclient/faces/jsp/start.jsp
+00:00:03.735  0.143 546 (16683) GET 304 text/css  https://www.swissreg.ch/srclient/css/base.css
+00:00:03.765  0.132 546 (5514)  GET 304 text/css  https://www.swissreg.ch/srclient/css/print.css
+00:00:03.794  0.107 527 (4589)  GET 304 text/javascript https://www.swissreg.ch/srclient/js/sr2.js
+00:00:03.951  0.202 567 (4637)  GET (Aborted) image/png (NS_BINDING_ABORTED)  https://www.swissreg.ch/srclient/img/ige_logo_86.png
+
+00:00:05.804  0.211 790 228 POST  200 text/html https://www.swissreg.ch/srclient/faces/jsp/start.jsp
+  autoScroll  0,0
+  id_swissreg_SUBMIT  1
+  id_swissreg:_idcl id_swissreg_sub_nav_ipiNavigation_item0
+  id_swissreg:_link_hidden_ 
+  javax.faces.ViewState rO0ABXVyABNbTGphdmEubGFuZy5PYmplY3Q7kM5YnxBzKWwCAAB4cAAAAAN0AAEycHQADi9qc3Avc3RhcnQuanNw
+
+00:00:03.951  0.202 567 (4637)  GET (Aborted) image/png (NS_BINDING_ABORTED)  https://www.swissreg.ch/srclient/img/ige_logo_86.png
+00:00:05.804  0.211 790 228 POST  200 text/html https://www.swissreg.ch/srclient/faces/jsp/start.jsp
+00:00:06.061  0.092 430 (16577) GET (Cache) text/css  https://www.swissreg.ch/srclient/css/base.css
+00:00:06.091  0.070 431 (5408)  GET (Cache) text/css  https://www.swissreg.ch/srclient/css/print.css
+00:00:06.121  0.050 412 (4483)  GET (Cache) text/javascript https://www.swissreg.ch/srclient/js/sr2.js
+00:00:09.378  0.149 993 228 POST  200 text/html https://www.swissreg.ch/srclient/faces/jsp/trademark/sr1.jsp
+  autoScroll  0,0
+  id_swissreg:mainContent:id_txf_tm_no  
+  id_swissreg:mainContent:id_txf_app_no 
+  id_swissreg:mainContent:id_txf_tm_text  
+  id_swissreg:mainContent:id_txf_applicant  
+  id_swissreg_SUBMIT  1
+  id_swissreg:_idcl id_swissreg_sub_nav_ipiNavigation_item0_item3
+  id_swissreg:_link_hidden_ 
+  javax.faces.ViewState rO0ABXVyABNbTGphdmEubGFuZy5PYmplY3Q7kM5YnxBzKWwCAAB4cAAAAAN0AAEzcHQAFi9qc3AvdHJhZGVtYXJrL3NyMS5qc3A=
+
+00:00:09.577  0.100 438 (16577) GET (Cache) text/css  https://www.swissreg.ch/srclient/css/base.css
+00:00:09.607  0.081 439 (5408)  GET (Cache) text/css  https://www.swissreg.ch/srclient/css/print.css
+00:00:09.636  0.065 420 (4483)  GET (Cache) text/javascript https://www.swissreg.ch/srclient/js/sr2.js
+00:00:49.839  12.023  2355  228 POST  200 text/html https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp
+  autoScroll  0,933
+  id_swissreg:mainContent:id_txf_tm_no  
+  id_swissreg:mainContent:id_txf_app_no 
+  id_swissreg:mainContent:id_txf_tm_text  
+  id_swissreg:mainContent:id_txf_applicant  
+  id_swissreg:mainContent:id_cbxCountry _ALL
+  id_swissreg:mainContent:id_txf_agent  
+  id_swissreg:mainContent:id_txf_licensee 
+  id_swissreg:mainContent:id_txf_nizza_class  
+  id_swissreg:mainContent:id_txf_appDate  05.09.2001
+  id_swissreg:mainContent:id_txf_expiryDate 
+  id_swissreg:mainContent:id_cbxTMTypeGrp _ALL
+  id_swissreg:mainContent:id_cbxTMForm  _ALL
+  id_swissreg:mainContent:id_cbxTMColorClaim  _ALL
+  id_swissreg:mainContent:id_txf_pub_date 
+  id_swissreg:mainContent:id_ckbTMPubReason 1
+  id_swissreg:mainContent:id_ckbTMPubReason 2
+  id_swissreg:mainContent:id_ckbTMPubReason 3
+  id_swissreg:mainContent:id_ckbTMPubReason 4
+  id_swissreg:mainContent:id_ckbTMPubReason 5
+  id_swissreg:mainContent:id_ckbTMPubReason 6
+  id_swissreg:mainContent:id_ckbTMPubReason 7
+  id_swissreg:mainContent:id_ckbTMPubReason 8
+  id_swissreg:mainContent:id_ckbTMState 1
+  id_swissreg:mainContent:id_ckbTMState 3
+  id_swissreg:mainContent:id_cbxFormatChoice  1
+  id_swissreg:mainContent:id_cbxHitsPerPage 25
+  id_swissreg:mainContent:id_ckbTMChoice  tm_lbl_tm_text
+  id_swissreg:mainContent:id_ckbTMChoice  tm_lbl_applicant
+  id_swissreg:mainContent:id_ckbTMChoice  tm_lbl_country
+  id_swissreg:mainContent:id_ckbTMChoice  tm_lbl_agent
+  id_swissreg:mainContent:id_ckbTMChoice  tm_lbl_app_date
+  id_swissreg:mainContent:sub_fieldset:id_submit  suchen
+  id_swissreg_SUBMIT  1
+  id_swissreg:_idcl 
+  id_swissreg:_link_hidden_ 
+  javax.faces.ViewState rO0ABXVyABNbTGphdmEubGFuZy5PYmplY3Q7kM5YnxBzKWwCAAB4cAAAAAN0AAE0cHQAFi9qc3AvdHJhZGVtYXJrL3NyMy5qc3A=
+ 
+
+00:01:01.932  0.420 438 (16577) GET (Cache) text/css  https://www.swissreg.ch/srclient/css/base.css
+00:01:01.966  0.387 439 (5408)  GET (Cache) text/css  https://www.swissreg.ch/srclient/css/print.css
+00:01:01.999  0.361 420 (4483)  GET (Cache) text/javascript https://www.swissreg.ch/srclient/js/sr2.js
+00:01:02.053  0.464 555 940 GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=F3090AD03C1FAAD32F68A4D53CFD284C4FC639CC.png
+00:01:02.086  0.450 555 1340  GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=A125D72B277A6D9DE535872C6D44E6A585F5BBFC.png
+00:01:02.119  0.400 555 842 GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=971DFB320F13D45CFDC1C69A31C8261DCCD22905.png
+00:01:02.152  0.400 555 1750  GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=020A0ED60527C9A0F4A6CF65E5C3EF76992C32C0.png
+00:01:02.185  0.381 555 1745  GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=737F4084A506E562FA62FE654010674D1FDB3241.png
+00:01:02.218  0.266 555 1396  GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=77FF942F14819CF5541E5C204A33D07048789EB3.png
+00:01:02.251  0.328 555 3734  GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=2E9E0627E5A64697DA7FB919346C71D1E4AECD16.png
+00:01:02.283  0.377 555 579 GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=92089998803056EAC9720324AE1AB835C9949CF4.png
+00:01:02.316  0.289 555 4782  GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=3B5FDB9BB3713C35186E8272FAC35CFF16F089D3.png
+00:01:02.349  0.331 555 1449  GET 200 image/png https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=thumb&ImageHash=58AADB47EFA4BEC079EDEC5A08EDB8F1E48800B3.png

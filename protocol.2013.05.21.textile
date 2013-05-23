@@ -1,3 +1,19 @@
+* Work on 2013.05.22
+
+** Use timespan als filename
+** corrected missing bin/brand2csv for gem
+** Better handling of adresslines like '90 route de Frontenex', 'Via San Salvatore, 2
+
+Trimmed script for more logging in VERBOSE mode. Therefore to debug I always call the following stuff
+@rm -rf mechanize/; time ruby -v bin/brand2csv 05.09.2001@
+
+* Verified the following things
+** Get/Post request via HttpFox (see logs/protocol_swissreg.log)
+** Content of POST-Data via mechanize and HttpFox (identical except)
+** Tagged this commit as "POST_verified"
+
+* Work on 2013.05.21
+
 * Added spike_mechanize_swissreg.rb
 
 Also this attempt works if I specify a trademark name or number. But it does not work, when specifying a timespan for the "Hinterlegungsdatum".
