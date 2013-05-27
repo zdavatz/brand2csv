@@ -440,7 +440,9 @@ module Brand2csv
                                }
             ausgabe.puts s.chop
         }        
+        ausgabe.close
       else
+        
         CSV.open(filename,  'w', :headers=>results[0].members,
                                   :write_headers => true,
                                   :col_sep => ';'

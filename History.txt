@@ -2,6 +2,7 @@
 
 * Avoid force_encoding if ruby version 1.8.*
 * Retry up to three times for failures
+* Make rspec spec pass under Ruby 1.8.*
 
 === 0.1.6 27.05.2013
 
