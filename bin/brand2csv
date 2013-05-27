@@ -37,13 +37,13 @@ rescue OptionParser::MissingArgument,
 end
 
 
-unless args.size == 1
+unless args.size >= 1
   puts help
   exit 1  
 end
 
 begin
-  Brand2csv::run(args[0])
+  Brand2csv::run(args[0], args[1])
 rescue Interrupt
   puts "Unterbrochen. Breche mit Fehler ab"
   exit 1
