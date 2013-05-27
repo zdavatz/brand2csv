@@ -1,3 +1,14 @@
+* Work on 2013.05.27
+
+* Should be able to fetch up to 10'000 hits. 
+** Problems: Seems to hang silently after a few thousands hits
+** Cannot limit search to only "Hängige Gesuche" and "Aktive Marken"
+
+* Work on 2013.05.26
+
+* Added first rake tests to speed up work for 10'000 hits
+* Added second parameter to limit according to trademark name as passing a timespan is not honoured by swissreg
+
 * Work on 2013.05.22
 
 ** Use timespan als filename

@@ -1,3 +1,10 @@
+=== 0.1.6 27.05.2013
+
+* Added support for parsing results up to 10'000 hits
+* Added rspec
+* Added (undocumented) second parameter to limit according the trademark name
+* Added .travis.yml to enable running tests via http://about.travis-ci.org/docs/
+
 === 0.1.5 23.05.2013
 
 * Run under Ruby 1.8.7
