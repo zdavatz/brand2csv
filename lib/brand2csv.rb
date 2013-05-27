@@ -517,7 +517,7 @@ module Brand2csv
         doc = Nokogiri::Slop(File.open(filename))        
       else
         body = @agent.page.body
-        body.force_encoding('utf-8')
+        body.force_encoding('utf-8') unless /^1\.8/.match(RUBY_VERSION)
         doc = Nokogiri::Slop(body)
         filename = "#{LogDir}/vereinfachte_#{pageNr}.html"
         writeResponse(filename)
@@ -538,7 +538,18 @@ module Brand2csv
         nextId   = einfach.firstHit.to_i - 1 + position.to_i
         data3 = einfach.getPostDataForDetail(nextId, id)
         Swissreg::setAllInputValue(@agent.page.forms.first, data3)
-        @agent.page.forms.first.submit
+        nrTries = 1
+        while true
+          begin 
+            @agent.page.forms.first.submit
+            break
+          rescue
+            puts "Rescue in submit. nrTries is #{nrTries}"
+            nrTries += 1
+            sleep 1
+            exit 1 if nrTries > 3
+          end
+        end
         filename = "#{LogDir}/vereinfachte_detail_#{einfach.firstHit + position}.html"
         writeResponse(filename)
         matchResult = @agent.page.search('h1').text
@@ -567,7 +578,7 @@ module Brand2csv
         doc = Nokogiri::Slop(File.open(filename))        
       else
         body = @agent.page.body
-        body.force_encoding('utf-8')
+        body.force_encoding('utf-8') unless /^1\.8/.match(RUBY_VERSION)
         doc = Nokogiri::Slop(body)
         writeResponse(filename)
       end

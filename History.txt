@@ -1,3 +1,8 @@
+=== 0.1.7 27.05.2013
+
+* Avoid force_encoding if ruby version 1.8.*
+* Retry up to three times for failures
+
 === 0.1.6 27.05.2013
 
 * Added support for parsing results up to 10'000 hits
