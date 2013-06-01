@@ -546,9 +546,9 @@ module Brand2csv
             @agent.page.forms.first.submit
             break
           rescue
-            puts "Rescue in submit. nrTries is #{nrTries}"
+            puts "Rescue in submit. nrTries is #{nrTries}. Retry after a few seconds"
             nrTries += 1
-            sleep 1
+            sleep 10
             exit 1 if nrTries > 3
           end
         end
@@ -562,6 +562,7 @@ module Brand2csv
         end
         @results << Swissreg::getMarkenInfoFromDetail(Nokogiri::Slop(@agent.page.body))
         @agent.back
+        sleep 1      
       }
       filename = "#{LogDir}/vereinfachte_#{pageNr}_back.html"
       writeResponse(filename)
@@ -600,8 +601,12 @@ module Brand2csv
 
   def Brand2csv::run(timespan, marke = 'a*')
     session = Swissreg.new(timespan, marke)
-    session.parse_swissreg
-    session.fetchresult
+    begin
+      session.parse_swissreg
+      session.fetchresult
+    rescue Interrupt, Net::HTTP::Persistent::Error
+      puts "Unterbrochen. Vesuche #{session.results.size} Resultate zu speichern"
+    end
     Swissreg::emitCsv(session.results, "#{timespan}.csv")
   end
   
