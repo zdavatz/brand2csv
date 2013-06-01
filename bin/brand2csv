@@ -14,9 +14,7 @@ Usage:
   #{File.basename(__FILE__)} timespan
     Find all brands registered in switzerland during the given timespan.
     The following examples valid timespan periods:
-      1.10.2005
-      1.10.2005-31.10.2005
-      1.10.2005, 5.10.2005-31.10.2005
+      brand2csv 01.01.2013 "b*" #will search for all brand starting with "b"
     The results are stored in the file ausgabe.csv.
     The trademark name is either a real brand name or a link to an image.
 EOS
