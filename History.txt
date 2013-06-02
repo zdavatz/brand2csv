@@ -1,6 +1,6 @@
 === 0.1.9 02.06.2013
 
-* Fixed longstanding bug which prevented filtering according to the registration date
+* Fixed bug which prevented correct interpretation of result.
 * Display again errors when search too long
 * Update to latest mechanize gem
 
