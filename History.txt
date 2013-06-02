@@ -1,6 +1,8 @@
 === 0.2.0 02.06.2013
 
 * Updated README.md
+* Fix problem with & in names
+* Catch "500 Internal Server Error" when connecting to swissreg
 
 === 0.1.9 02.06.2013
 

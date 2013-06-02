@@ -38,7 +38,7 @@ describe 'Tests parsing adress line' do
   it "must handle correctly Via San Salvatore, 2" do
     full_address_line = 'Ideal Hobby Sagl, Via San Salvatore, 2, 6902 Paradiso'
     number = 'for_debugging'
-    zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, full_address_line.split(Swissreg::LineSplit))
+    zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, full_address_line)
     zeile_1.should == 'Ideal Hobby Sagl'
     zeile_2.should == 'Via San Salvatore, 2'
     zeile_3.should be_nil
@@ -49,7 +49,7 @@ describe 'Tests parsing adress line' do
   it "must handle correctly 90, route de Frontenex" do    
     full_address_line = 'Olivier Karim Wasem, 90, route de Frontenex, 1208 Genève'
     number = 'for_debugging'
-    zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, full_address_line.split(Swissreg::LineSplit))
+    zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, full_address_line)
     zeile_1.should == 'Olivier Karim Wasem'
     zeile_2.should == '90, route de Frontenex'
     zeile_3.should be_nil
@@ -60,11 +60,13 @@ describe 'Tests parsing adress line' do
   it "must handle ampersands correctly" do
     full_address_line = 'Schweiz. Serum- &amp; Impfinstitut, und Institut zur Erforschung der, Infektionskrankheiten, Rehhagstrasse 79, 3018 Bern'    
     number = 'for_debugging'
-    zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, full_address_line.split(Swissreg::LineSplit))
+    zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, full_address_line)
     zeile_1.should == 'Schweiz. Serum- & Impfinstitut'
-    zeile_2.should be_nil
-    zeile_3.should be_nil
-    plz.should be_nil
-    ort.should be_nil
+    zeile_2.should == 'und Institut zur Erforschung der'
+    zeile_3.should == 'Infektionskrankheiten'
+    zeile_4.should == 'Rehhagstrasse 79'
+    zeile_5.should be_nil
+    plz.should == '3018'
+    ort.should == 'Bern'
   end
 end

@@ -18,6 +18,7 @@ module Brand2csv
       # Weitere gesehene Fehler
     BekannteFehler = 
           ['Das Datum ist ung', # ültig'
+           '500 Internal Server Error',
            'Vereinfachte Trefferliste anzeigen',
             'Es wurden keine Daten gefunden.',
             'Die Suchkriterien sind teilweise unzul', # ässig',
@@ -134,11 +135,17 @@ module Brand2csv
                       marke = @marke,    
                       nummer =@number) #  nummer = "559271" ergibt genau einen treffer
 
-      @agent.get_file  Start_uri # 'https://www.swissreg.ch/srclient/faces/jsp/start.jsp'
-      writeResponse("#{LogDir}/session_expired.html")
-      @agent.page.links[3].click
-      writeResponse("#{LogDir}/homepage.html")
-      @state = @agent.page.form["javax.faces.ViewState"]
+      begin
+        @agent.get_file  Start_uri # 'https://www.swissreg.ch/srclient/faces/jsp/start.jsp'
+        writeResponse("#{LogDir}/session_expired.html")
+        checkErrors(@agent.page.body, false)
+        @agent.page.links[3].click
+        writeResponse("#{LogDir}/homepage.html")
+        @state = @agent.page.form["javax.faces.ViewState"]
+      rescue Net::HTTPInternalServerError, Mechanize::ResponseCodeError
+        puts "Net::HTTPInternalServerError oder Mechanize::ResponseCodeError gesehen.\n   #{Base_uri} hat wahrscheinlich Probleme"
+        exit 3
+      end
       data = [
         ["autoScroll", "0,0"],
         ["id_swissreg:_link_hidden_", ""],
@@ -169,7 +176,7 @@ module Brand2csv
         ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
         ["id_swissreg:mainContent:id_txf_tm_text", "#{marke}"],
         ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
-        ["id_swissreg:mainContent:id_cbxCountry", "CH"],
+        ["id_swissreg:mainContent:id_cbxCountry", '_ALL'],
         ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
         ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
         ["id_swissreg:mainContent:id_txf_nizza_class", ""], # Nizza Klassifikation Nr.
@@ -211,7 +218,8 @@ module Brand2csv
 
     # the number is only passed to facilitate debugging
     # lines are the address lines 
-    def Swissreg::parseAddress(number, lines)
+    def Swissreg::parseAddress(number, inhaber)
+      lines = CGI.unescapeHTML(inhaber).split(LineSplit)
       ort = nil
       plz = nil
       
@@ -307,13 +315,14 @@ module Brand2csv
             end
           end
           if x.children.first.text.eql?('Inhaber/in')
-            inhaber = />(.*)<\/td/.match(x.children[1].to_s)[1].gsub('<br>',LineSplit).gsub('&amp;', '&')
-            x.children[1].children.each{ |child| zeilen << child.text.gsub('&amp;', '&') unless child.text.length == 0 } # avoid adding <br>
+#            inhaber = />(.*)<\/td/.match(x.children[1].to_s)[1].gsub('<br>',LineSplit).gsub('&amp;', '&')
+#            x.children[1].children.each{ |child| zeilen << child.text.gsub('&amp;', '&') unless child.text.length == 0 } # avoid adding <br>
+             inhaber = />(.*)<\/td/.match(x.children[1].to_s)[1].gsub('<br>',LineSplit)
           end
           hinterlegungsdatum = x.children[1].text if x.children.first.text.eql?('Hinterlegungsdatum')           
           number = x.children[1].text if x.children.first.text.eql?('Gesuch Nr.')           
       }
-      zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, zeilen)
+      zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, inhaber)
       marke = Marke.new(bezeichnung, number,  inhaber,  DefaultCountry,  hinterlegungsdatum, zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort )
     end
     
