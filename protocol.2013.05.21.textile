@@ -1,3 +1,12 @@
+* Work on 2013.06.02
+
+* Checked mechanize source code. Code for posting the request seems okay
+* Before sending an email to the mechanize mailing list, I decided to make a
+** simple example for the search (see swissreg.rb)
+** this simple example gives correct results
+** Differences are in how the session is setup. I don't see the exact reason however
+* Adapted lib/brand2csv.rb accordingly 
+
 * Work on 2013.05.27
 
 * Should be able to fetch up to 10'000 hits. 

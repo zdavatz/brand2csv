@@ -102,19 +102,6 @@ module Brand2csv
       @errors  = Hash.new
       @lastDetail =nil
       @counterDetails = 0
-      if false # force some values
-        # asp* => 138 records werden geholt
-        # a* => Es wurden 25,490 Treffer gefunden. Davon werden 10000 zufällig ausgewählte Schutztitel angezeigt. Bitte schränken Sie Ihre Suche weiter ein.
-        #       Ab 501 Treffer wird eine vereinfachte Trefferliste angezeigt.  
-        # asp* => 138 records werden geholt
-
-        @marke = 'zzzyyzzzzyzzyz*' # => Fehlermeldung: Es wurden keine Daten gefunden
-        @marke = 'aspira' 
-        # @number = '500000' # für Weihnachten
-        @number = ' 601416' # für aspira
-  #      @marke = "*WEIH*"
-        @timespan = nil
-      end
     end
     
     def writeResponse(filename)
@@ -127,21 +114,16 @@ module Brand2csv
       end
     end
 
-    def view_state(response)
-      if /^1\.8/.match(RUBY_VERSION)
-        match = /javax.faces.ViewState.*?value="([^"]+)"/u.match(response)
-      else
-        match = /javax.faces.ViewState.*?value="([^"]+)"/u.match(response.force_encoding('utf-8'))
-      end
-      match ? match[1] : ""
-    end
-
-    def checkErrors(body)
+    def checkErrors(body, exitIfFailure = true)
       BekannteFehler.each {
       |errMsg|
         if body.to_s.index(errMsg)
-          puts "Tut mir leid. Suche wurde mit Fehlermeldung <#{errMsg}> abgebrochen."
-          exit 2
+          if exitIfFailure
+            puts "Tut mir leid. Suche wurde mit Fehlermeldung <#{errMsg}> abgebrochen."
+            exit 2
+          else
+            puts "Info: Suche meldet <#{errMsg}> "
+          end
         end
       }
     end
@@ -152,14 +134,11 @@ module Brand2csv
                       marke = @marke,    
                       nummer =@number) #  nummer = "559271" ergibt genau einen treffer
 
-      # discard this first response
-      # swissreg.ch could not handle cookie by redirect.
-      # HTTP status code is also strange at redirection.
-      @agent.get Start_uri  # get a cookie for the session
-      content = @agent.get_file Start_uri
-      writeResponse("#{LogDir}/start.jsp")
-      # get only view state
-      @state = view_state(content)
+      @agent.get_file  Start_uri # 'https://www.swissreg.ch/srclient/faces/jsp/start.jsp'
+      writeResponse("#{LogDir}/session_expired.html")
+      @agent.page.links[3].click
+      writeResponse("#{LogDir}/homepage.html")
+      @state = @agent.page.form["javax.faces.ViewState"]
       data = [
         ["autoScroll", "0,0"],
         ["id_swissreg:_link_hidden_", ""],
@@ -167,16 +146,9 @@ module Brand2csv
         ["id_swissreg:_idcl", "id_swissreg_sub_nav_ipiNavigation_item0"],
         ["javax.faces.ViewState", @state],
       ]
-      if UseClick 
-        Swissreg::setAllInputValue(@agent.page.forms.first, data)
-        @agent.page.forms.first.submit      
-      else
-        @agent.post(Start_uri, data)  
-      end
-      writeResponse("#{LogDir}/start2.jsp")
-      # Navigation with mechanize like this fails and returns to the home page
-      # @agent.page.link_with(:id => "id_swissreg_sub_nav_ipiNavigation_item0").click
-      
+      @agent.page.form['id_swissreg:_idcl'] = 'id_swissreg_sub_nav_ipiNavigation_item0'
+      @agent.page.forms.first.submit
+      writeResponse("#{LogDir}/trademark_simple.html")
       data = [
         ["autoScroll", "0,0"],
         ["id_swissreg:_link_hidden_", ""],
@@ -184,129 +156,57 @@ module Brand2csv
         ["id_swissreg:_idcl", "id_swissreg_sub_nav_ipiNavigation_item0_item3"],
         ["javax.faces.ViewState", @state],
       ]
-      # sr1 ist die einfache suche, sr3 die erweiterte Suche
-      if UseClick 
-        Swissreg::setAllInputValue(@agent.page.forms.first, data)
-        @agent.page.forms.first.submit      
-      else
+      @agent.page.form['id_swissreg:_idcl'] = 'id_swissreg_sub_nav_ipiNavigation_item0_item3'
+      @agent.page.forms.first.submit
+      writeResponse("#{LogDir}/trademark_extended.html")
+      
+      data = [
+        ["autoScroll", "0,829"],
+        ["id_swissreg:_link_hidden_", ""],
+        ["id_swissreg:mainContent:id_ckbTMState", "1"], # Hängige Gesuche 1
+        ["id_swissreg:mainContent:id_ckbTMState", "3"], # Aktive Marken 3
+        ["id_swissreg:mainContent:id_txf_tm_no", ""],# Marken Nr
+        ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
+        ["id_swissreg:mainContent:id_txf_tm_text", "#{marke}"],
+        ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
+        ["id_swissreg:mainContent:id_cbxCountry", "CH"],
+        ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
+        ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
+        ["id_swissreg:mainContent:id_txf_nizza_class", ""], # Nizza Klassifikation Nr.
+        ["id_swissreg:mainContent:id_txf_appDate", "#{timespan}"] ,
+        ["id_swissreg:mainContent:id_txf_expiryDate", ""], # Ablauf Schutzfrist
+        ["id_swissreg:mainContent:id_cbxTMTypeGrp", "_ALL"],  # Markenart
+        ["id_swissreg:mainContent:id_cbxTMForm", "_ALL"],  # Markentyp
+        ["id_swissreg:mainContent:id_cbxTMColorClaim", "_ALL"],  # Farbanspruch
+        ["id_swissreg:mainContent:id_txf_pub_date", ""], # Publikationsdatum
+        ["id_swissreg:mainContent:id_ckbTMPubReason", '1'],
+        ["id_swissreg:mainContent:id_ckbTMPubReason", '2'],
+        ["id_swissreg:mainContent:id_ckbTMPubReason", '3'],
+        ["id_swissreg:mainContent:id_ckbTMPubReason", '4'],
+        ["id_swissreg:mainContent:id_ckbTMPubReason", '5'],
+        ["id_swissreg:mainContent:id_ckbTMPubReason", '6'],
+        ["id_swissreg:mainContent:id_ckbTMPubReason", '7'],
+        ["id_swissreg:mainContent:id_ckbTMPubReason", '8'],
+        ["id_swissreg:mainContent:id_cbxFormatChoice", "1"],
+        ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_tm_text"],
+        ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_applicant"],
+        ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_country"],
+        ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_app_date"],
+        ["id_swissreg:mainContent:id_cbxHitsPerPage", HitsPerPage],   # Treffer pro Seite
+        ["id_swissreg:mainContent:sub_fieldset:id_submit", "suchen"],
+        ["id_swissreg_SUBMIT", "1"],
+        ["id_swissreg:_idcl", ""],
+        ["id_swissreg:_link_hidden_", ""],
+        ["javax.faces.ViewState", @state],
+      ]
+      begin
         @agent.post(Sr3, data)
+      rescue Timeout::Error 
+        puts "Timeout!"
+        retry
       end
-      writeResponse("#{LogDir}/sr3.jsp")
-      
-      # Fill out form values
-      selectedPublicationStates =  ['1', '3']
-      @agent.page.form('id_swissreg').checkboxes.each{ 
-        |box| 
-        TMChoiceFields.index(box.value) ? box.check : box.uncheck 
-        # box.check if $VERBOSE
-        # select all publication reasons
-        box.check if /id_ckbTMPubReason/.match(box.name)
-        # select all publication states or accept default states
-        # box.check if /id_ckbTMState/.match(box.name) 
-        if /id_ckbTMState/.match(box.name) 
-          if selectedPublicationStates.index(box.value)
-            puts "Select id_ckbTMState #{box.value}" if $VERBOSE
-            box.check
-          else
-            box.uncheck
-          end
-        end
-      }
-      if $VERBOSE and false # fill all details for marke  567120        
-        # Felder, welche nie bei der Antwort auftauchen
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_licensee') { |x| x.value = 'BBB Inc*' }
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_expiryDate') { |x| x.value = timespan }
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_pub_date') { |x| x.value = timespan }
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_nizza_class') { |x| x.value = '9' }      
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_agent') { |x| x.value = 'Marc Stucki*' }
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_cbxCountry') { |x| x.value = 'CH' }  # 'CH' or '_ALL'
-
-        # Felder, welche im Resultat angezeigt werden
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_applicant') { |x| x.value = 'ASP ATON*' } #inhaber
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_tm_no') { |x| x.value = "567120" }
-        @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_app_no') { |x| x.value = '50329/2008' }
-      end
-      
-      # Feld, welches im Resultat angezeigt wird
-      @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_tm_text') { |x| x.value = @marke}
-      
-      # Felder, welches nie bei der Antwort auftaucht. Ein Versuch .gsub('.', '%2E') schlug ebenfalls fehl!
-      @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_txf_appDate') { |x| x.value = timespan}
-      
-      # Feld, welches ebenfalls berücksichtigt wird
-      @agent.page.form('id_swissreg').field(:name => 'id_swissreg:mainContent:id_cbxHitsPerPage') { |x| x.value = HitsPerPage }
-      @agent.page.form('id_swissreg').field(:name => 'autoScroll') { |x| x.value = '0,0' }
-      
-      if $VERBOSE
-        puts "State of searchForm is:"
-        @agent.page.form('id_swissreg').fields.each{ |f| puts "field: #{f.name}: #{f.value}"}  
-        @agent.page.form('id_swissreg').checkboxes.each{ |box| puts "#{box.name} checked? #{box.checked}"} 
-      end
-      
-        @criteria = [
-          ["autoScroll", "0,829"],
-          ["id_swissreg:_link_hidden_", ""],
-          ["id_swissreg:mainContent:id_ckbTMState", "1"], # "Hängige Gesuche 1
-    #      ["id_swissreg:mainContent:id_ckbTMState", "2"], # "Gelöschte Gesuche 2
-          ["id_swissreg:mainContent:id_ckbTMState", "3"], # aktive Marken 3 
-    #      ["id_swissreg:mainContent:id_ckbTMState", "4"], # gelöschte Marken 4
-          ["id_swissreg:mainContent:id_cbxCountry", "_ALL"], # Auswahl Länder _ALL
-#            ["id_swissreg:mainContent:id_txf_tm_no", ""],  # Marken Nr
-          ["id_swissreg:mainContent:id_txf_tm_no", nummer],# Marken Nr
-          ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
-          ["id_swissreg:mainContent:id_txf_tm_text", marke],
-          ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
-          ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
-          ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
-          ["id_swissreg:mainContent:id_txf_nizza_class", ""], # Nizza Klassifikation Nr.
-    #      ["id_swissreg:mainContent:id_txf_appDate", timespan], # Hinterlegungsdatum
-          ["id_swissreg:mainContent:id_txf_appDate", timespan] ,
-          ["id_swissreg:mainContent:id_txf_expiryDate", ""], # Ablauf Schutzfrist
-          # Markenart: Individualmarke 1 Kollektivmarke 2 Garantiemarke 3
-          ["id_swissreg:mainContent:id_cbxTMTypeGrp", "_ALL"],  # Markenart
-          ["id_swissreg:mainContent:id_cbxTMForm", "_ALL"],  # Markentyp
-          ["id_swissreg:mainContent:id_cbxTMColorClaim", "_ALL"],  # Farbanspruch
-          ["id_swissreg:mainContent:id_txf_pub_date", ""], # Publikationsdatum
-          
-        # info zu Publikationsgrund id_swissreg:mainContent:id_ckbTMPubReason
-          ["id_swissreg:mainContent:id_ckbTMPubReason", "1"], #Neueintragungen
-          ["id_swissreg:mainContent:id_ckbTMPubReason", "2"], #Berichtigungen
-          ["id_swissreg:mainContent:id_ckbTMPubReason", "3"], #Verlängerungen
-          ["id_swissreg:mainContent:id_ckbTMPubReason", "4"], #Löschungen
-          ["id_swissreg:mainContent:id_ckbTMPubReason", "5"], #Inhaberänderungen
-          ["id_swissreg:mainContent:id_ckbTMPubReason", "6"], #Vertreteränderungen
-          ["id_swissreg:mainContent:id_ckbTMPubReason", "7"], #Lizenzänderungen
-          ["id_swissreg:mainContent:id_ckbTMPubReason", "8"], #Weitere Registeränderungen
-#            ["id_swissreg:mainContent:id_ckbTMEmptyHits", "0"],  # Leere Trefferliste anzeigen
-                      
-          # "id_swissreg:mainContent:id_cbxFormatChoice" 2 = Publikationsansicht 1 = Registeransicht
-          ["id_swissreg:mainContent:id_cbxFormatChoice", "1"],
-          ["id_swissreg:mainContent:id_cbxHitsPerPage", HitsPerPage],   # Treffer pro Seite
-        ]
-        TMChoiceFields.each{ | field2display| @criteria << ["id_swissreg:mainContent:id_ckbTMChoice", field2display] }
-                                                            # id_swissreg:mainContent:id_ckbTMChoice  tm_lbl_tm_text
-        puts "Marke ist #{marke}" if marke               # Wortlaut der Marke
-        puts "Hinterlegungsdatum ist #{timespan}"  if $VERBOSE and timespan   
-        puts "nummer ist #{timespan}" if nummer
-        @criteria <<   ["id_swissreg:mainContent:sub_fieldset:id_submit", "suchen"]
-        @criteria <<    ["id_swissreg_SUBMIT", "1"]
-        @criteria <<    ["id_swissreg:_idcl", ""]
-        @criteria <<    ["id_swissreg:_link_hidden_", ""]
-        @criteria <<    ["javax.faces.ViewState", @state]
-        
-      if true # UseClick 
- #       Swissreg::setAllInputValue(@agent.page.forms.first, @criteria)
-#        setPublicationStates(@agent.page.form('id_swissreg'))
-        @agent.page.form('id_swissreg').click_button(@agent.page.form('id_swissreg').button_with(:value => "suchen"))
-      else # use post        
-        writeResponse("#{LogDir}/vor_post_sr3.jsp")
-        @agent.post(Sr3, @criteria)
-        writeResponse("#{LogDir}/erweiterte_suche.html")
-        @agent.page.form('id_swissreg').click_button(@agent.page.form('id_swissreg').button_with(:value => "suchen"))
-      end
-      # Hier sollten eigentlich alle Felder auftauchen, wie
-      # Marke=asp*; Land (Inhaber/in)=Schweiz; Markenart=Alle; Markentyp=Alle; Farbanspruch=Alle; Publikationsgrund= Neueintragungen, Berichtigungen, Verlängerungen, Löschungen, Inhaberänderungen, Vertreteränderungen, Lizenzänderungen, Weitere Registeränderungen; Status= hängige Gesuche, aktive Marken      
-      writeResponse("#{LogDir}/resultate.jsp")
+      writeResponse("#{LogDir}/first_results.html")
+      checkErrors(@agent.page.body, false)
     end
 
     # the number is only passed to facilitate debugging
@@ -407,8 +307,8 @@ module Brand2csv
             end
           end
           if x.children.first.text.eql?('Inhaber/in')
-            inhaber = />(.*)<\/td/.match(x.children[1].to_s)[1].gsub('<br>',LineSplit)
-            x.children[1].children.each{ |child| zeilen << child.text unless child.text.length == 0 } # avoid adding <br>
+            inhaber = />(.*)<\/td/.match(x.children[1].to_s)[1].gsub('<br>',LineSplit).gsub('&amp;', '&')
+            x.children[1].children.each{ |child| zeilen << child.text.gsub('&amp;', '&') unless child.text.length == 0 } # avoid adding <br>
           end
           hinterlegungsdatum = x.children[1].text if x.children.first.text.eql?('Hinterlegungsdatum')           
           number = x.children[1].text if x.children.first.text.eql?('Gesuch Nr.')           

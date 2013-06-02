@@ -1,6 +1,8 @@
 === 0.1.9 02.06.2013
 
 * Fixed bug which prevented correct interpretation of result.
+* Display again errors when search too long
+* Update to latest mechanize gem
 
 === 0.1.8 01.06.2013
 
