@@ -3,9 +3,10 @@
 brand2csv using swissreg.ch to get addresses.
 
 ## Usage
+```
 brand2csv 01.01.2013 "b*"
 brand2csv 1.10.2005-31.10.2005
-
+```
 ## Help
 ```
 ~> brand2csv --help
