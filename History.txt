@@ -1,3 +1,7 @@
+=== 0.2.1 02.06.2013
+
+* Fixed problems with ampersands. Emit clear error when swisssreg.ch not responding correctly
+
 === 0.2.0 02.06.2013
 
 * Updated README.md
