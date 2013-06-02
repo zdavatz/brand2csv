@@ -57,4 +57,14 @@ describe 'Tests parsing adress line' do
     ort.should == 'Genève'
   end
   
+  it "must handle ampersands correctly" do
+    full_address_line = 'Schweiz. Serum- &amp; Impfinstitut, und Institut zur Erforschung der, Infektionskrankheiten, Rehhagstrasse 79, 3018 Bern'    
+    number = 'for_debugging'
+    zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, full_address_line.split(Swissreg::LineSplit))
+    zeile_1.should == 'Schweiz. Serum- & Impfinstitut'
+    zeile_2.should be_nil
+    zeile_3.should be_nil
+    plz.should be_nil
+    ort.should be_nil
+  end
 end

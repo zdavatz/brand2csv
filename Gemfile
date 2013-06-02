@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-gem 'mechanize', '~> 2.5.1'
+gem 'mechanize' # , '~> 2.5.1'
 gem 'mechanize', :path => '/opt/src/mechanize/pkg' if false
 git 'git://github.com/sparklemotion/mechanize.git' do #, :tag => 'v0.13.4'
   gem 'mechanize'
@@ -16,4 +16,5 @@ group :development do
   gem 'webmock'
   gem 'hoe', '>= 3.4'
   gem 'rdoc'
+#  gem 'pry'
 end
