@@ -517,6 +517,7 @@ module Brand2csv
       puts "Unterbrochen. Vesuche #{session.results.size} Resultate zu speichern"
     end
     Swissreg::emitCsv(session.results, "#{timespan}.csv")
+    session.results
   end
   
 end # module Brand2csv
