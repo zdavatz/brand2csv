@@ -1,3 +1,9 @@
+=== 0.2.2 05.06.2013
+
+* Fixed (re-)opening of session
+* Reorganized for long run. Still errors on reconnect
+* Added real fetch from swissreg to specs
+
 === 0.2.1 02.06.2013
 
 * Fixed problems with ampersands. Emit clear error when swisssreg.ch not responding correctly
