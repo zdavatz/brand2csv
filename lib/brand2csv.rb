@@ -33,6 +33,7 @@ module Brand2csv
     Sr3      = "#{Base_uri}/srclient/faces/jsp/trademark/sr3.jsp"
     Sr30     = "#{Base_uri}/srclient/faces/jsp/trademark/sr30.jsp"
     Sr300    = "#{Base_uri}/srclient/faces/jsp/trademark/sr300.jsp"
+    DetailRegexp  = /d_swissreg:mainContent:data:(\d*):tm_no_detail:id_detail/i
     AddressRegexp = /^(\d\d\d\d)\W*(.*)/
     LineSplit     = ', '
     DefaultCountry = 'Schweiz'
@@ -84,7 +85,7 @@ module Brand2csv
     
     MaxZeilen = 5
     HitsPerPage = 250
-    LogDir = 'mechanize'
+    LogDir = 'log'
     
     attr_accessor :marke, :results, :timespan
     
@@ -100,6 +101,7 @@ module Brand2csv
         agent.log = Logger.new("#{LogDir}/mechanize.log") if $VERBOSE
       }
       @results = []
+      @all_trademark_numbers = []
       @errors  = Hash.new
       @lastDetail =nil
       @counterDetails = 0
@@ -131,10 +133,8 @@ module Brand2csv
     
     UseClick = false
     
-    def parse_swissreg(timespan = @timespan,  # sollte 377 Treffer ergeben, für 01.06.2007-10.06.2007, 559271 wurde in diesem Zeitraum registriert
-                      marke = @marke,    
-                      nummer =@number) #  nummer = "559271" ergibt genau einen treffer
-
+    # Initialize a session with swissreg and save the cookie as @state
+    def init_swissreg
       begin
         @agent.get_file  Start_uri # 'https://www.swissreg.ch/srclient/faces/jsp/start.jsp'
         writeResponse("#{LogDir}/session_expired.html")
@@ -146,6 +146,13 @@ module Brand2csv
         puts "Net::HTTPInternalServerError oder Mechanize::ResponseCodeError gesehen.\n   #{Base_uri} hat wahrscheinlich Probleme"
         exit 3
       end
+    end
+    
+    def parse_swissreg(timespan = @timespan,  # sollte 377 Treffer ergeben, für 01.06.2007-10.06.2007, 559271 wurde in diesem Zeitraum registriert
+                      marke = @marke,    
+                      nummer =@number) #  nummer = "559271" ergibt genau einen treffer
+
+      init_swissreg
       data = [
         ["autoScroll", "0,0"],
         ["id_swissreg:_link_hidden_", ""],
@@ -303,7 +310,6 @@ module Brand2csv
       bezeichnung = nil
       inhaber = nil
       hinterlegungsdatum = nil
-      zeilen = []
       doc.xpath("//html/body/form/div/div/fieldset/div/table/tbody/tr").each{ 
         |x|
           if x.children.first.text.eql?('Marke')
@@ -314,9 +320,8 @@ module Brand2csv
               bezeichnung = x.children[1].text 
             end
           end
+
           if x.children.first.text.eql?('Inhaber/in')
-#            inhaber = />(.*)<\/td/.match(x.children[1].to_s)[1].gsub('<br>',LineSplit).gsub('&amp;', '&')
-#            x.children[1].children.each{ |child| zeilen << child.text.gsub('&amp;', '&') unless child.text.length == 0 } # avoid adding <br>
              inhaber = />(.*)<\/td/.match(x.children[1].to_s)[1].gsub('<br>',LineSplit)
           end
           hinterlegungsdatum = x.children[1].text if x.children.first.text.eql?('Hinterlegungsdatum')           
@@ -326,6 +331,24 @@ module Brand2csv
       marke = Marke.new(bezeichnung, number,  inhaber,  DefaultCountry,  hinterlegungsdatum, zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort )
     end
     
+    def fetchDetails(nummer) # takes a long time!
+      @counterDetails += 1
+      filename = "#{LogDir}/detail_#{nummer.gsub('/','.')}.html"
+      if File.exists?(filename)
+        doc = Nokogiri::Slop(File.open(filename))
+      else
+        url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=#{nummer}"
+        pp "#{Time.now.strftime("%H:%M:%S")}: Opening #{filename} using #{url}" if $VERBOSE
+        content = @agent.get_file url
+        body = @agent.page.body
+        body.force_encoding('utf-8') unless /^1\.8/.match(RUBY_VERSION)
+        doc = Nokogiri::Slop(body)
+        writeResponse(filename)
+      end
+      marke =  Swissreg::getMarkenInfoFromDetail(doc)
+      @results << marke
+    end
+
     def Swissreg::emitCsv(results, filename='ausgabe.csv')
       return if results == nil or results.size == 0
       if /^1\.8/.match(RUBY_VERSION)
@@ -360,6 +383,17 @@ module Brand2csv
       end
     end
     
+    def Swissreg::getTrademarkNumbers(doc)
+      trademark_numbers = []
+      doc.search('a').each{ 
+        |link| 
+          if DetailRegexp.match(link.attribute('id'))
+            trademark_numbers << link.children.first.children.first.content
+          end
+      }
+      trademark_numbers
+    end
+    
     class Swissreg::Vereinfachte
       attr_reader :links2details, :trademark_search_id, :inputData, :firstHit, :nrHits, :nrSubPages, :pageNr
       HitRegexpDE = /Seite (\d*) von ([\d']*) - Treffer ([\d']*)-([\d']*) von ([\d']*)/
@@ -384,7 +418,7 @@ module Brand2csv
         @state = Swissreg::inputValue(Swissreg::getInputValuesFromPage(doc),  'javax.faces.ViewState')
         doc.search('a').each{ 
           |link| 
-            if m = /d_swissreg:mainContent:data:(\d*):tm_no_detail:id_detail/i.match(link.attribute('id'))
+            if m = DetailRegexp.match(link.attribute('id'))
               # puts "XXX #{link.attribute('onclick').to_s} href: #{link.attribute('href').to_s} value #{link.attribute('value').to_s}" if $VERBOSE
               m  = /'tmMainId','(\d*)'/.match(link.attribute('onclick').to_s)
               tmMainId = m[1].to_i
@@ -422,7 +456,7 @@ module Brand2csv
       end
       
     end
-    
+      
     def getAllHits(filename = nil, pageNr = 1)
       if filename && File.exists?(filename)
         doc = Nokogiri::Slop(File.open(filename))        
@@ -435,7 +469,7 @@ module Brand2csv
       end
       
       einfach = Swissreg::Vereinfachte.new(doc)
-      puts "#{Time.now.strftime("%H:%M:%S")} status: fetch #{pageNr} of #{einfach.nrSubPages}"
+      puts "#{Time.now.strftime("%H:%M:%S")} status: getAllHits for #{pageNr} of #{einfach.nrSubPages} pages"  if $VERBOSE
       subPage2Fetch = pageNr + 1
       data2 = einfach.getPostDataForSubpage(subPage2Fetch).clone
       if (HitsPerPage < einfach.nrHits - einfach.firstHit)
@@ -443,46 +477,16 @@ module Brand2csv
       else
         itemsToFetch = einfach.nrHits - einfach.firstHit
       end
-      0.upto(itemsToFetch-1) {
-        |position|
-        id       = einfach.links2details[position]
-        nextId   = einfach.firstHit.to_i - 1 + position.to_i
-        data3 = einfach.getPostDataForDetail(nextId, id)
-        Swissreg::setAllInputValue(@agent.page.forms.first, data3)
-        nrTries = 1
-        while true
-          begin 
-            @agent.page.forms.first.submit
-            break
-          rescue
-            puts "Rescue in submit. nrTries is #{nrTries}. Retry after a few seconds"
-            nrTries += 1
-            sleep 10
-            exit 1 if nrTries > 3
-          end
-        end
-        filename = "#{LogDir}/vereinfachte_detail_#{einfach.firstHit + position}.html"
-        writeResponse(filename)
-        matchResult = @agent.page.search('h1').text
-        unless /Detailansicht zu (Gesuch|Marke)/.match(matchResult)
-          puts matchResult
-          puts "Attention did not find 'Detailansicht' in #{filename}. Someting went wrong!"
-          break
-        end
-        @results << Swissreg::getMarkenInfoFromDetail(Nokogiri::Slop(@agent.page.body))
-        @agent.back
-        sleep 1      
-      }
+      @all_trademark_numbers += Swissreg::getTrademarkNumbers(doc)
+
       filename = "#{LogDir}/vereinfachte_#{pageNr}_back.html"
       writeResponse(filename)
-      if pageNr < (einfach.nrSubPages-1)
-          puts "Fetching page #{subPage2Fetch} of #{einfach.nrSubPages}" if $VERBOSE
-          Swissreg::setAllInputValue(@agent.page.forms.first, data2)
-          @agent.page.forms.first.submit
-          getAllHits(nil, subPage2Fetch)
-          @agent.back
-      end
-      
+      if pageNr < (einfach.nrSubPages)
+        Swissreg::setAllInputValue(@agent.page.forms.first, data2)
+        @agent.page.forms.first.submit
+        getAllHits(nil, subPage2Fetch)
+      end      
+      @all_trademark_numbers
     end
 
     def fetchresult(filename =  "#{LogDir}/fetch_1.html", counter = 1)
@@ -503,11 +507,33 @@ module Brand2csv
         filename =  "#{LogDir}/vereinfacht.html"
         writeResponse(filename)
       end
-      getAllHits(filename, counter)
+      getAllHits(doc, counter)
+      puts"getAllHits: returned #{@all_trademark_numbers ? @all_trademark_numbers.size : 0} hits "
+      if @all_trademark_numbers
+        @all_trademark_numbers.each{ 
+          |nr|
+            nrRetries = 0
+            begin
+              fetchDetails(nr)
+            rescue Exception => e
+              nrRetries += 1
+              puts e.backtrace
+              puts "fetchDetails did not work reinit session and retry for #{nr}. nrRetries #{nrRetries}/3. e #{e}"
+              if nrRetries <= 3
+                init_swissreg
+                retry
+              else
+                raise Interrupt
+              end
+            end
+        
+        }
+      else
+        puts "Could not find any trademarks in #{filename}"
+      end
     end
-
   end # class Swissreg
-
+  
   def Brand2csv::run(timespan, marke = 'a*')
     session = Swissreg.new(timespan, marke)
     begin
