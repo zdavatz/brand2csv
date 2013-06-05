@@ -93,13 +93,6 @@ module Brand2csv
       @timespan = timespan
       @marke = marke
       @number = nil
-      
-      @agent = Mechanize.new { |agent|
-        agent.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:16.0) Gecko/20100101 Firefox/16.0'
-        agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        FileUtils.makedirs(LogDir) if $VERBOSE or defined?(RSpec)
-        agent.log = Logger.new("#{LogDir}/mechanize.log") if $VERBOSE
-      }
       @results = []
       @all_trademark_numbers = []
       @errors  = Hash.new
@@ -136,6 +129,12 @@ module Brand2csv
     # Initialize a session with swissreg and save the cookie as @state
     def init_swissreg
       begin
+        @agent = Mechanize.new { |agent|
+          agent.user_agent = 'Mozilla/5.0 (X11; Linux x86_64; rv:16.0) Gecko/20100101 Firefox/16.0'
+          agent.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          FileUtils.makedirs(LogDir) if $VERBOSE or defined?(RSpec)
+          agent.log = Logger.new("#{LogDir}/mechanize.log") if $VERBOSE
+        }
         @agent.get_file  Start_uri # 'https://www.swissreg.ch/srclient/faces/jsp/start.jsp'
         writeResponse("#{LogDir}/session_expired.html")
         checkErrors(@agent.page.body, false)
@@ -333,12 +332,14 @@ module Brand2csv
     
     def fetchDetails(nummer) # takes a long time!
       @counterDetails += 1
-      filename = "#{LogDir}/detail_#{nummer.gsub('/','.')}.html"
+      init_swissreg if @counterDetails % 90 == 0 # it seems that swissreg is artificially slowing down serving request after 100 hits
+      filename = "#{LogDir}/detail_#{sprintf('%05d', @counterDetails)}_#{nummer.gsub('/','.')}.html"
       if File.exists?(filename)
         doc = Nokogiri::Slop(File.open(filename))
       else
-        url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=#{nummer}"
-        pp "#{Time.now.strftime("%H:%M:%S")}: Opening #{filename} using #{url}" if $VERBOSE
+        url = "#{Sr300}?language=de&section=tm&id=#{nummer}"
+        pp "#{Time.now.strftime("%H:%M:%S")}: Opening #{filename}" if $VERBOSE
+        $stdout.flush
         content = @agent.get_file url
         body = @agent.page.body
         body.force_encoding('utf-8') unless /^1\.8/.match(RUBY_VERSION)
