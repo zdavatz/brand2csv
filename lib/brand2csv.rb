@@ -89,9 +89,10 @@ module Brand2csv
     
     attr_accessor :marke, :results, :timespan
     
-    def initialize(timespan, marke = nil)
+    def initialize(timespan, marke = nil, swiss_only=false)
       @timespan = timespan
       @marke = marke
+      @swiss_only = swiss_only
       @number = nil
       @results = []
       @all_trademark_numbers = []
@@ -182,7 +183,7 @@ module Brand2csv
         ["id_swissreg:mainContent:id_txf_app_no", ""],                       # Gesuch Nr.
         ["id_swissreg:mainContent:id_txf_tm_text", "#{marke}"],
         ["id_swissreg:mainContent:id_txf_applicant", ""],                    # Inhaber/in
-        ["id_swissreg:mainContent:id_cbxCountry", '_ALL'],
+        ["id_swissreg:mainContent:id_cbxCountry", @swiss_only ? 'CH' : '_ALL'],
         ["id_swissreg:mainContent:id_txf_agent", ""],                         # Vertreter/in
         ["id_swissreg:mainContent:id_txf_licensee", ""], # Lizenznehmer
         ["id_swissreg:mainContent:id_txf_nizza_class", ""], # Nizza Klassifikation Nr.
@@ -535,8 +536,8 @@ module Brand2csv
     end
   end # class Swissreg
   
-  def Brand2csv::run(timespan, marke = 'a*')
-    session = Swissreg.new(timespan, marke)
+  def Brand2csv::run(timespan, marke = 'a*', swiss_only = false)
+    session = Swissreg.new(timespan, marke, swiss_only)
     begin
       session.parse_swissreg
       session.fetchresult

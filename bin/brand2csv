@@ -18,11 +18,13 @@ Usage:
       brand2csv 1.10.2005-31.10.2005 #this will work as well from version 0.1.9
     The results are stored in the file <date_selected>.csv.
     The trademark name is either a real brand name or a link to an image.
+  --swiss_only Fetch only trademarks from swiss owner
 EOS
 end
 
 parser = OptionParser.new
 opts = {}
+parser.on('--swiss_only') {|v| opts[:swiss_only] = true }
 parser.on_tail('-h', '--help') { puts help; exit }
 
 args = ARGV.dup
@@ -42,7 +44,7 @@ unless args.size >= 1
 end
 
 begin
-  Brand2csv::run(args[0], args[1])
+  Brand2csv::run(args[0], args[1], opts[:swiss_only])
 rescue Interrupt
   puts "Unterbrochen. Breche mit Fehler ab"
   exit 1
