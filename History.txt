@@ -1,3 +1,7 @@
+=== 0.2.4 06.06.2013
+
+* Rescue another exception
+
 === 0.2.3 06.06.2013
 
 * Added option --swiss_only
