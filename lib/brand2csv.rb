@@ -341,8 +341,23 @@ module Brand2csv
         url = "#{Sr300}?language=de&section=tm&id=#{nummer}"
         pp "#{Time.now.strftime("%H:%M:%S")}: Opening #{filename}" if $VERBOSE
         $stdout.flush
-        content = @agent.get_file url
-        body = @agent.page.body
+        nrRetries = 0
+        begin
+          content = @agent.get_file url
+          body = @agent.page.body
+        rescue 'getaddrinfo: Name or service not known', Exception => e
+          nrRetries += 1
+          puts e.backtrace
+          if nrRetries <= 3
+            puts "get_file did not work reinit session and retry for #{nr}. nrRetries #{nrRetries}/3. e #{e}"
+            sleep 60  # Sleep a minute to let network recover
+            init_swissreg
+            retry
+          else
+            puts "get_file did not work reinit session raise Interrupt"
+            raise Interrupt
+          end
+        end
         body.force_encoding('utf-8') unless /^1\.8/.match(RUBY_VERSION)
         doc = Nokogiri::Slop(body)
         writeResponse(filename)
@@ -517,14 +532,16 @@ module Brand2csv
             nrRetries = 0
             begin
               fetchDetails(nr)
-            rescue Exception => e
+            rescue SocketError, Exception => e
               nrRetries += 1
               puts e.backtrace
-              puts "fetchDetails did not work reinit session and retry for #{nr}. nrRetries #{nrRetries}/3. e #{e}"
               if nrRetries <= 3
+                puts "fetchDetails did not work reinit session and retry for #{nr}. nrRetries #{nrRetries}/3. e #{e}"
+                sleep 60  # Sleep a minute to let network recover
                 init_swissreg
                 retry
               else
+                puts "fetchDetails did not work reinit session raise Interrupt"
                 raise Interrupt
               end
             end
