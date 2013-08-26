@@ -5,6 +5,7 @@ root = Pathname.new(__FILE__).realpath.parent.parent
 $:.unshift root.join('lib') if $0 == __FILE__
 
 require 'optparse'
+require "date"
 require 'brand2csv'
 
 def help
@@ -22,32 +23,78 @@ Usage:
 EOS
 end
 
-parser = OptionParser.new
-opts = {}
-parser.on('--swiss_only') {|v| opts[:swiss_only] = true }
-parser.on_tail('-h', '--help') { puts help; exit }
-
-args = ARGV.dup
-begin
-  parser.parse!(args)
-rescue OptionParser::MissingArgument,
-       OptionParser::InvalidArgument,
-       OptionParser::InvalidOption
-  puts help
-  exit 1
+def validates_timespan(arg)
+  valid = true
+  timespan = ""
+  dates = arg.gsub(/[^\d\.-]/, '').split("-")
+  catch (:error) do
+    dates.map.with_index do |d, i|
+      sep = (dates.length > 1 && i != 0) ? "-" : ""
+      begin
+        Date.parse(d)
+        timespan << sep + d
+      rescue ArgumentError
+        valid = false
+        elms = d.split(".")
+        prms = [elms[2], elms[1], -1].map(&:to_i)
+        begin
+          cand = Date.new(*prms).strftime("%d.%m.%Y")
+          if elms[0] == (elms - cand.to_s.split(".")).first
+            timespan << sep + cand.to_s
+          else
+            raise
+          end
+        rescue ArgumentError
+          timespan = "" # unknown
+          throw :error
+        end
+      end
+    end
+  end
+  message = nil
+  unless valid
+    if timespan.empty?
+      message = "Timespan is invalid"
+    else
+      message = "Did you mean #{timespan} ?"
+    end
+  end
+  [valid, message]
 end
 
+if $0 == __FILE__
+  parser = OptionParser.new
+  opts = {}
+  parser.on('--swiss_only') {|v| opts[:swiss_only] = true }
+  parser.on_tail('-h', '--help') { puts help; exit }
 
-unless args.size >= 1
-  puts help
-  exit 1  
+  args = ARGV.dup
+  begin
+    parser.parse!(args)
+  rescue OptionParser::MissingArgument,
+         OptionParser::InvalidArgument,
+         OptionParser::InvalidOption
+    puts help
+    exit 1
+  end
+
+  unless args.size >= 1
+    puts help
+    exit 1
+  end
+
+  valid,message = validates_timespan(args[0])
+  unless valid
+    puts message
+    exit 1
+  end
+
+  begin
+    Brand2csv::run(args[0], args[1], opts[:swiss_only])
+  rescue Interrupt
+    puts "Unterbrochen. Breche mit Fehler ab"
+    exit 1
+  end
+
+  puts "#{__FILE__} completed successfully" if $VERBOSE
 end
-
-begin
-  Brand2csv::run(args[0], args[1], opts[:swiss_only])
-rescue Interrupt
-  puts "Unterbrochen. Breche mit Fehler ab"
-  exit 1
-end
-
-puts "#{__FILE__} completed successfully" if $VERBOSE

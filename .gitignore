@@ -1,4 +1,6 @@
 *~
 *#
+.ruby-version
+.bundle
 ausgabe.csv
 mechanize/
