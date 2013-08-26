@@ -62,39 +62,40 @@ def validates_timespan(arg)
   [valid, message]
 end
 
-if $0 == __FILE__
-  parser = OptionParser.new
-  opts = {}
-  parser.on('--swiss_only') {|v| opts[:swiss_only] = true }
-  parser.on_tail('-h', '--help') { puts help; exit }
+parser = OptionParser.new
+opts = {}
+parser.on('--swiss_only') {|v| opts[:swiss_only] = true }
+parser.on_tail('-h', '--help') { puts help; exit }
 
-  args = ARGV.dup
-  begin
-    parser.parse!(args)
-  rescue OptionParser::MissingArgument,
-         OptionParser::InvalidArgument,
-         OptionParser::InvalidOption
-    puts help
-    exit 1
-  end
+args = ARGV.dup
+begin
+  parser.parse!(args)
+rescue OptionParser::MissingArgument,
+       OptionParser::InvalidArgument,
+       OptionParser::InvalidOption
+  puts help
+  exit 1
+end
 
-  unless args.size >= 1
-    puts help
-    exit 1
-  end
+unless args.size >= 1
+  puts help
+  exit 1
+end
 
+unless args.empty?
   valid,message = validates_timespan(args[0])
   unless valid
     puts message
     exit 1
   end
-
-  begin
-    Brand2csv::run(args[0], args[1], opts[:swiss_only])
-  rescue Interrupt
-    puts "Unterbrochen. Breche mit Fehler ab"
-    exit 1
-  end
-
-  puts "#{__FILE__} completed successfully" if $VERBOSE
 end
+
+begin
+  puts args
+  Brand2csv::run(args[0], args[1], opts[:swiss_only])
+rescue Interrupt
+  puts "Unterbrochen. Breche mit Fehler ab"
+  exit 1
+end
+
+puts "#{__FILE__} completed successfully" if $VERBOSE
