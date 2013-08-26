@@ -28,7 +28,7 @@ def validates_timespan(arg)
   timespan = ""
   dates = arg.gsub(/[^\d\.-]/, '').split("-")
   catch (:error) do
-    dates.map.with_index do |d, i|
+    dates.each_with_index do |d, i|
       sep = (dates.length > 1 && i != 0) ? "-" : ""
       begin
         Date.parse(d)
@@ -91,7 +91,6 @@ unless args.empty?
 end
 
 begin
-  puts args
   Brand2csv::run(args[0], args[1], opts[:swiss_only])
 rescue Interrupt
   puts "Unterbrochen. Breche mit Fehler ab"

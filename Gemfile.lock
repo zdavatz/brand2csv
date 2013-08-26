@@ -28,7 +28,7 @@ GEM
     multi_json (1.7.5)
     net-http-digest_auth (1.3)
     net-http-persistent (2.8)
-    nokogiri (1.5.9)
+    nokogiri (1.5.10)
     ntlm-http (0.1.1)
     rake (10.0.4)
     rdoc (4.0.1)
@@ -68,7 +68,7 @@ DEPENDENCIES
   hoe (>= 3.4)
   json (~> 1.7.7)
   mechanize
-  nokogiri
+  nokogiri (~> 1.5.10)
   rdoc
   rspec
   watir
