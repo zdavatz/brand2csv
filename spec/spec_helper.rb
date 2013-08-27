@@ -8,9 +8,13 @@ Bundler.require
 require 'rspec'
 require "webmock/rspec"
 
-require 'brand2csv'
-
 Dir[File.join(File.dirname(__FILE__), "support/**/*.rb")].each { |f| require f }
+
+require 'brand2csv'
+begin
+  capture(:stdout) { load File.expand_path("../../bin/brand2csv", __FILE__) }
+rescue LoadError
+end
 
 RSpec.configure do |config|
   config.treat_symbols_as_metadata_keys_with_true_values = true

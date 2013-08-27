@@ -1,33 +1,6 @@
 # encoding : utf-8
 require "spec_helper"
 
-require 'stringio'
-require 'ostruct'
-
-module Kernel
-  # for stdout/stderr
-  def capture(stream)
-    begin
-      stream = stream.to_s
-      eval "$#{stream} = StringIO.new"
-      yield
-      result = eval("$#{stream}").string
-    ensure
-      eval "$#{stream} = #{stream.upcase}"
-    end
-    result
-  end
-  # for load executable
-  def exit(status=false)
-    raise LoadError
-  end
-end
-
-begin
-  capture(:stdout) { load File.expand_path("../../bin/brand2csv", __FILE__) }
-rescue LoadError
-end
-
 describe Brand2csv do
   describe "#validates_timespan" do
     subject { validates_timespan(arg) }
