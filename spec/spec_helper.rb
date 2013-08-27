@@ -6,9 +6,11 @@ require 'bundler/setup'
 Bundler.require
 
 require 'rspec'
+require "webmock/rspec"
+
 require 'brand2csv'
 
-Dir[File.join(File.dirname(__FILE__), "spec/support/**/*.rb")].each { |f| require f }
+Dir[File.join(File.dirname(__FILE__), "support/**/*.rb")].each { |f| require f }
 
 RSpec.configure do |config|
   config.treat_symbols_as_metadata_keys_with_true_values = true
@@ -22,4 +24,7 @@ RSpec.configure do |config|
   # the seed, which is printed after each run.
   #     --seed 1234
   config.order = 'random'
+
+  # Helper
+  config.include(ServerMockHelper)
 end

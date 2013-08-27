@@ -19,13 +19,13 @@ module Kernel
   end
   # for load executable
   def exit(status=false)
-    raise Interrupt
+    raise LoadError
   end
 end
 
 begin
   capture(:stdout) { load File.expand_path("../../bin/brand2csv", __FILE__) }
-rescue Interrupt
+rescue LoadError
 end
 
 describe Brand2csv do

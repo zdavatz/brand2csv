@@ -1,8 +1,6 @@
 #encoding : utf-8
-require 'rspec'
-require 'pp'
+require 'spec_helper'
 require 'tempfile'
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib/','brand2csv.rb'))
 
 include Brand2csv
 
