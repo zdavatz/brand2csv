@@ -1,3 +1,7 @@
+=== 0.2.7 27.08.2013
+
+* Update to handle too many result view in swissreg
+
 === 0.2.6 26.08.2013
 
 * Update to work with ruby 1.8.7
