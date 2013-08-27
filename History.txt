@@ -1,3 +1,8 @@
+=== 0.2.6 26.08.2013
+
+* Update to work with ruby 1.8.7
+* Remove $0 check from executable
+
 === 0.2.5 26.08.2013
 
 * Add timespan validator
