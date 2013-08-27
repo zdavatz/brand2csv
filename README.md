@@ -20,3 +20,6 @@ Usage:
     The results are stored in the file <date_selected>.csv.
     The trademark name is either a real brand name or a link to an image.
 ```
+## Travis
+You can find Travis builds here:
+  * https://travis-ci.org/zdavatz/brand2csv
