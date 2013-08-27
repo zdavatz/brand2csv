@@ -10,6 +10,7 @@ require 'logger'
 
 module Brand2csv
 
+
   class Marke < Struct.new(:name, :markennummer, :inhaber, :land, :hinterlegungsdatum, :zeile_1, :zeile_2, :zeile_3, :zeile_4, :zeile_5, :plz, :ort)
   end
 
@@ -420,11 +421,18 @@ module Brand2csv
       # There we find info like "Seite 1 von 26 - Treffer 1-250 von 6'349" and upto 250 links to details
       def initialize(doc)
         @inputData = []
+        @pageNr = @nrSubPages = @firstHit = @nrHits = 0
         m = HitRegexpDE.match(doc.text)
-        @pageNr = m[1].sub("'", '').to_i
-        @nrSubPages = m[2].sub("'", '').to_i
-        @firstHit = m[3].sub("'", '').to_i
-        @nrHits = m[5].sub("'", '').to_i
+        if m
+          begin
+            c = m.to_a.map{|n| n.gsub(/'/, "").to_i }
+            @pageNr     = c[1]
+            @nrSubPages = c[2]
+            @firstHit   = c[3]
+            @nrHits     = c[5]
+          rescue NoMethodError
+          end
+        end
         @trademark_search_id = Swissreg::inputValue(Swissreg::getInputValuesFromPage(doc), Vivian)
         @links2details = []
         doc.search('input').each{ |input| 
@@ -478,13 +486,19 @@ module Brand2csv
       if filename && File.exists?(filename)
         doc = Nokogiri::Slop(File.open(filename))        
       else
-        body = @agent.page.body
+        form = @agent.page.form
+        btn  = form.buttons.last
+        if btn && btn.name == "id_swissreg:mainContent:id_show_simple_view_hitlist"
+          res = @agent.submit(form, btn)
+          body = res.body
+        else
+         body = @agent.page.body
+        end
         body.force_encoding('utf-8') unless /^1\.8/.match(RUBY_VERSION)
         doc = Nokogiri::Slop(body)
         filename = "#{LogDir}/vereinfachte_#{pageNr}.html"
         writeResponse(filename)
       end
-      
       einfach = Swissreg::Vereinfachte.new(doc)
       puts "#{Time.now.strftime("%H:%M:%S")} status: getAllHits for #{pageNr} of #{einfach.nrSubPages} pages"  if $VERBOSE
       subPage2Fetch = pageNr + 1
