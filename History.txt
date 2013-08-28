@@ -1,3 +1,9 @@
+=== 0.2.8 28.08.2013
+
+* Update author
+* Add build badge
+* Fix webmock specs
+
 === 0.2.7 27.08.2013
 
 * Update to handle too many result view in swissreg
