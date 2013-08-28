@@ -9,5 +9,6 @@ rvm:
 notifications:
   email:
     recipients:
+      - ngiger@ywesee.com
       - yasaka@ywesee.com
       - zdavatz@ywesee.com
