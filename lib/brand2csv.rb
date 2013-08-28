@@ -227,20 +227,21 @@ module Brand2csv
     # the number is only passed to facilitate debugging
     # lines are the address lines 
     def Swissreg::parseAddress(number, inhaber)
-      lines = CGI.unescapeHTML(inhaber).split(LineSplit)
       ort = nil
       plz = nil
-      
-      # Search for plz/address
-      1.upto(lines.length-1).each  {
-        |cnt|
-          if    m = AddressRegexp.match(lines[cnt])
-            lines[cnt+1] = nil
-            plz = m[1]; ort = m[2]
-            cnt.upto(MaxZeilen-1).each{ |cnt2| lines[cnt2] = nil }
-            break
-          end
-      }
+      if inhaber
+        lines = CGI.unescapeHTML(inhaber).split(LineSplit)
+        # Search for plz/address
+        1.upto(lines.length-1).each  {
+          |cnt|
+            if    m = AddressRegexp.match(lines[cnt])
+              lines[cnt+1] = nil
+              plz = m[1]; ort = m[2]
+              cnt.upto(MaxZeilen-1).each{ |cnt2| lines[cnt2] = nil }
+              break
+            end
+        }
+      end
       unless plz
         puts "Achtung! Konnte Marke #{number} mit Inhaber #{lines.inspect} nicht parsen" if $VERBOSE
         return nil,   nil,     nil,     nil,     nil,     nil,     nil, nil
