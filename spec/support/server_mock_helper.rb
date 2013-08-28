@@ -36,7 +36,7 @@ module ServerMockHelper
         :status  => 200,
         :headers => {"Content-Type" => 'text/html; charset=utf-8'},
         :body    => stub_response)
-    # first result
+    # result page 1
     stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp"
     stub_response = File.read(File.expand_path("../../data/result_2_marken.html", __FILE__))
     stub_request(:post, stub_html_url).
@@ -76,7 +76,7 @@ module ServerMockHelper
         :status  => 200,
         :headers => {"Content-Type" => 'text/html; charset=utf-8'},
         :body    => stub_response)
-    # second result
+    # result page 2
     stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp"
     stub_response = File.read(File.expand_path("../../data/result_2_marken.html", __FILE__))
     stub_request(:post, stub_html_url).
@@ -110,6 +110,32 @@ module ServerMockHelper
           "id_swissreg:mainContent:id_txf_tm_text"     => "",
           "id_swissreg_SUBMIT"                         => "1",
           "javax.faces.ViewState"                      => "rO0ABXVyABNbTGphdmEubGFuZy5PYmplY3Q7kM5YnxBzKWwCAAB4cAAAAAN0AAEzcHQAFi9qc3AvdHJhZGVtYXJrL3NyMy5qc3A="
+        }).
+      to_return(
+        :status  => 200,
+        :headers => {"Content-Type" => 'text/html; charset=utf-8'},
+        :body    => stub_response)
+    # product 1 of aspectra*
+    stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=P-480296"
+    stub_response = File.read(File.expand_path("../../data/detail_00001_P-480296.html", __FILE__))
+    stub_request(:get, stub_html_url).
+      with(
+        :headers => {
+          "Accept" => "*/*",
+          "Host"   => "www.swissreg.ch",
+        }).
+      to_return(
+        :status  => 200,
+        :headers => {"Content-Type" => 'text/html; charset=utf-8'},
+        :body    => stub_response)
+    # product 2 of aspectra*
+    stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=P-482236"
+    stub_response = File.read(File.expand_path("../../data/detail_00002_P-482236.html", __FILE__))
+    stub_request(:get, stub_html_url).
+      with(
+        :headers => {
+          "Accept" => "*/*",
+          "Host"   => "www.swissreg.ch",
         }).
       to_return(
         :status  => 200,

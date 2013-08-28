@@ -10,6 +10,7 @@ describe 'Get some simple example from swissreg' do
     markierung = "Marke=#{marke}; Hinterlegungsdatum=#{timespan}; Markenart=Alle; Markentyp=Alle; Farbanspruch=Alle; Publikationsgrund= Neueintragungen, Berichtigungen; Status= hängige Gesuche, aktive Marken"
     results = nil
     capture(:stdout) { results = Brand2csv::run(timespan, marke) }
+    $stdout == "getAllHits: returned 2 hits"
     results.should_not be_nil
     results.size.should == 2
     results[0].zeile_1.should == 'Aspectra AG'
