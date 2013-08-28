@@ -1,5 +1,7 @@
 # brand2csv
 
+[![Build Status](https://secure.travis-ci.org/zdavatz/brand2csv.png)](http://travis-ci.org/zdavatz/brand2csv)
+
 brand2csv using swissreg.ch to get addresses.
 
 ## Usage
