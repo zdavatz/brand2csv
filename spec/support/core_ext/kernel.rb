@@ -17,9 +17,10 @@ module Kernel
     result
   end
 
+  alias :original_exit :exit
   # for load executable file
   def exit(status=false)
-    raise LoadError
+    (status == 1) ? raise(LoadError) : original_exit
   end
 end
 
