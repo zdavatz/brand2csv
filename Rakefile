@@ -11,7 +11,9 @@ Hoe.spec "brand2csv" do
   The csv contains the brand, link to image (if present), link to the detailinfo at swissreg.ch, name and address of owner (Inhaber)"
   self.summary     = "brand2csv creates csv files for swiss brands."
   self.urls        = ["https://github.com/zdavatz/brand2csv"] # gem.homepage
-  
+
+  license "GPLv3.0"
+
   # gem.add_runtime_dependency
   self.extra_deps << ['mechanize', '>= 2.6']
 
