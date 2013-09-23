@@ -4,3 +4,7 @@
 .bundle
 ausgabe.csv
 mechanize/
+log/
+pkg/
+watir/
+doc/

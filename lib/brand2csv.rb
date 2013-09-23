@@ -11,7 +11,7 @@ require 'logger'
 module Brand2csv
 
 
-  class Marke < Struct.new(:name, :markennummer, :inhaber, :land, :hinterlegungsdatum, :zeile_1, :zeile_2, :zeile_3, :zeile_4, :zeile_5, :plz, :ort)
+  class Marke < Struct.new(:name, :markennummer, :inhaber, :land, :hatVertreter, :hinterlegungsdatum, :zeile_1, :zeile_2, :zeile_3, :zeile_4, :zeile_5, :plz, :ort)
   end
 
   class Swissreg
@@ -46,7 +46,7 @@ module Brand2csv
             # "tm_lbl_no"], # disabled="disabled"], # Nummer
             "tm_lbl_applicant", # Inhaber/in
             "tm_lbl_country", # Land (Inhaber/in)
-            # "tm_lbl_agent", # Vertreter/in
+            "tm_lbl_agent", # Vertreter/in
             # "tm_lbl_licensee"], # Lizenznehmer/in
             "tm_lbl_app_date", # Hinterlegungsdatum
             ]
@@ -206,6 +206,7 @@ module Brand2csv
         ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_tm_text"],
         ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_applicant"],
         ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_country"],
+        ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_agent"],
         ["id_swissreg:mainContent:id_ckbTMChoice", "tm_lbl_app_date"],
         ["id_swissreg:mainContent:id_cbxHitsPerPage", HitsPerPage],   # Treffer pro Seite
         ["id_swissreg:mainContent:sub_fieldset:id_submit", "suchen"],
@@ -312,6 +313,7 @@ module Brand2csv
       bezeichnung = nil
       inhaber = nil
       hinterlegungsdatum = nil
+      hatVertreter = false
       doc.xpath("//html/body/form/div/div/fieldset/div/table/tbody/tr").each{ 
         |x|
           if x.children.first.text.eql?('Marke')
@@ -326,11 +328,16 @@ module Brand2csv
           if x.children.first.text.eql?('Inhaber/in')
              inhaber = />(.*)<\/td/.match(x.children[1].to_s)[1].gsub('<br>',LineSplit)
           end
+          
+          if x.children.first.text.eql?('Vertreter/in')
+            hatVertreter = true if x.children[1].text.length > 0
+          end
           hinterlegungsdatum = x.children[1].text if x.children.first.text.eql?('Hinterlegungsdatum')           
           number = x.children[1].text if x.children.first.text.eql?('Gesuch Nr.')           
       }
       zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, inhaber)
-      marke = Marke.new(bezeichnung, number,  inhaber,  DefaultCountry,  hinterlegungsdatum, zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort )
+      inhaber = inhaber.split(', , ')[0] # Catch cases where Inhaber has several postal addresses
+      marke = Marke.new(bezeichnung, number,  inhaber, DefaultCountry, hatVertreter, hinterlegungsdatum, zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort )
     end
     
     def fetchDetails(nummer) # takes a long time!
