@@ -2,7 +2,8 @@
 # encoding: utf-8
 
 module ServerMockHelper
-  def setup_swissreg_ch_server
+  
+  def setup_swissreg_ch_server(trademark, timespan, result_folder, trademark_ids)
     # main
     stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/start.jsp"
     stub_response = File.read(File.expand_path("../../data/main.html", __FILE__))
@@ -38,7 +39,7 @@ module ServerMockHelper
         :body    => stub_response)
     # result page 1
     stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp"
-    stub_response = File.read(File.expand_path("../../data/result_2_marken.html", __FILE__))
+    stub_response = File.read(File.expand_path("../../data/#{result_folder}/first_results.html", __FILE__))
     stub_request(:post, stub_html_url).
       with(
         :headers => {
@@ -59,7 +60,7 @@ module ServerMockHelper
           "id_swissreg:mainContent:id_ckbTMPubReason"      => "8",
           "id_swissreg:mainContent:id_ckbTMState"          => "3",
           "id_swissreg:mainContent:id_txf_agent"           => "",
-          "id_swissreg:mainContent:id_txf_appDate"         => "01.01.2012-31.12.2012",
+          "id_swissreg:mainContent:id_txf_appDate"         => "#{timespan}",
           "id_swissreg:mainContent:id_txf_app_no"          => "",
           "id_swissreg:mainContent:id_txf_applicant"       => "",
           "id_swissreg:mainContent:id_txf_expiryDate"      => "",
@@ -67,7 +68,7 @@ module ServerMockHelper
           "id_swissreg:mainContent:id_txf_nizza_class"     => "",
           "id_swissreg:mainContent:id_txf_pub_date"        => "",
           "id_swissreg:mainContent:id_txf_tm_no"           => "",
-          "id_swissreg:mainContent:id_txf_tm_text"         => "aspectra*",
+          "id_swissreg:mainContent:id_txf_tm_text"         => "#{trademark}",
           "id_swissreg:mainContent:sub_fieldset:id_submit" => "suchen",
           "id_swissreg_SUBMIT"                             => "1",
           "javax.faces.ViewState"                          => "rO0ABXVyABNbTGphdmEubGFuZy5PYmplY3Q7kM5YnxBzKWwCAAB4cAAAAAN0AAExcHQADi9qc3Avc3RhcnQuanNw"
@@ -78,7 +79,7 @@ module ServerMockHelper
         :body    => stub_response)
     # result page 2
     stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp"
-    stub_response = File.read(File.expand_path("../../data/result_2_marken.html", __FILE__))
+    stub_response = File.read(File.expand_path("../../data/#{result_folder}/first_results.html", __FILE__))
     stub_request(:post, stub_html_url).
       with(
         :headers => {
@@ -115,31 +116,28 @@ module ServerMockHelper
         :status  => 200,
         :headers => {"Content-Type" => 'text/html; charset=utf-8'},
         :body    => stub_response)
-    # product 1 of aspectra*
-    stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=P-480296"
-    stub_response = File.read(File.expand_path("../../data/detail_00001_P-480296.html", __FILE__))
-    stub_request(:get, stub_html_url).
-      with(
-        :headers => {
-          "Accept" => "*/*",
-          "Host"   => "www.swissreg.ch",
-        }).
-      to_return(
-        :status  => 200,
-        :headers => {"Content-Type" => 'text/html; charset=utf-8'},
-        :body    => stub_response)
-    # product 2 of aspectra*
-    stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=P-482236"
-    stub_response = File.read(File.expand_path("../../data/detail_00002_P-482236.html", __FILE__))
-    stub_request(:get, stub_html_url).
-      with(
-        :headers => {
-          "Accept" => "*/*",
-          "Host"   => "www.swissreg.ch",
-        }).
-      to_return(
-        :status  => 200,
-        :headers => {"Content-Type" => 'text/html; charset=utf-8'},
-        :body    => stub_response)
+      
+    counter = 0
+    trademark_ids.each{ 
+      |trademark_id|
+      counter += 1
+      stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=P-#{trademark_id}"
+      $stdout.puts "stub_html_url: #{stub_html_url}"
+      filename = File.expand_path("../../data/#{result_folder}/detail_#{sprintf('%05i',counter)}_#{trademark_id.sub('/','.')}.html", __FILE__)
+      $stdout.puts "filename: #{filename}"    
+      stub_response = File.read(filename)
+      stub_request(:get, stub_html_url).
+        with(
+          :headers => {
+            "Accept" => "*/*",
+            "Host"   => "www.swissreg.ch",
+          }).
+        to_return(
+          :status  => 200,
+          :headers => {"Content-Type" => 'text/html; charset=utf-8'},
+          :body    => stub_response)
+
+    }
   end
+ 
 end
