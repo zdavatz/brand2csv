@@ -313,7 +313,7 @@ module Brand2csv
       bezeichnung = nil
       inhaber = nil
       hinterlegungsdatum = nil
-      hatVertreter = false
+      hatVertreter = 'Nein'
       doc.xpath("//html/body/form/div/div/fieldset/div/table/tbody/tr").each{ 
         |x|
           if x.children.first.text.eql?('Marke')
@@ -330,7 +330,7 @@ module Brand2csv
           end
           
           if x.children.first.text.eql?('Vertreter/in')
-            hatVertreter = true if x.children[1].text.length > 0
+            hatVertreter = 'Ja' if x.children[1].text.length > 0
           end
           hinterlegungsdatum = x.children[1].text if x.children.first.text.eql?('Hinterlegungsdatum')           
           number = x.children[1].text if x.children.first.text.eql?('Gesuch Nr.')           

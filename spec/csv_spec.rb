@@ -20,7 +20,7 @@ describe 'Csv' do
     Swissreg::emitCsv(results, file.path)
     inhalte = IO.readlines(file.path)
     inhalte[0].chomp.should == 'name;markennummer;inhaber;land;hatVertreter;hinterlegungsdatum;zeile_1;zeile_2;zeile_3;zeile_4;zeile_5;plz;ort'
-    inhalte[1].chomp.should == 'https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=print&ImageHash=F431E13A9D8F363BD06604796634142A18A5BA7C.jpeg;00135/2013;Peter Löcker Bauart, Trollstrasse 20, 8400 Winterthur;Schweiz;false;13.03.2013;Peter Löcker Bauart;Trollstrasse 20;;;;8400;Winterthur'
+    inhalte[1].chomp.should == 'https://www.swissreg.ch/srclient/images/loadImage?Action=LoadImg&ItemType=tm&ImageType=print&ImageHash=F431E13A9D8F363BD06604796634142A18A5BA7C.jpeg;00135/2013;Peter Löcker Bauart, Trollstrasse 20, 8400 Winterthur;Schweiz;Nein;13.03.2013;Peter Löcker Bauart;Trollstrasse 20;;;;8400;Winterthur'
     inhalte[2].should == nil
   end
 
