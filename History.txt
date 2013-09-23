@@ -1,3 +1,13 @@
+=== 0.2.9 23.09.2013
+
+* Remove some debugging output
+* Added support for agent
+* Refactored testing trademarks specs
+* Updated .gitignore
+* Updated Rakefile with License
+* updated Rakefile
+* updated Rakefile to include License
+
 === 0.2.8 28.08.2013
 
 * Update author
