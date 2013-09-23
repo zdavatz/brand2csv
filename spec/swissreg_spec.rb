@@ -18,9 +18,9 @@ describe 'Get some simple example from swissreg' do
     results[0].ort.should == 'Zürich'
     csv = "#{timespan}.csv"
     csv_lines = IO.readlines(csv)
-    csv_lines[1].split(';')[HasVertreterPos].should == "true"
-    csv_lines[2].split(';')[HasVertreterPos].should == "true"
-    csv_lines[3].split(';')[HasVertreterPos].should == "false"
+    csv_lines[1].split(';')[HasVertreterPos].should == "Ja"
+    csv_lines[2].split(';')[HasVertreterPos].should == "Ja"
+    csv_lines[3].split(';')[HasVertreterPos].should == "Nein"
   end
 
   it "should get correct results from swissreg when owner has two postal addresses" do
@@ -38,7 +38,7 @@ describe 'Get some simple example from swissreg' do
     csv = "#{timespan}.csv"
     csv_lines = IO.readlines(csv)
     csv_lines[1].split(';')[2].should == 'Philipp Arnold, Seestrasse 37a, 6454 Flüelen'
-    csv_lines[1].split(';')[HasVertreterPos].should == "true"
+    csv_lines[1].split(';')[HasVertreterPos].should == "Ja"
   end
 
 end
