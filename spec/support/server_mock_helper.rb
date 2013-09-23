@@ -121,10 +121,9 @@ module ServerMockHelper
     trademark_ids.each{ 
       |trademark_id|
       counter += 1
-      stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=P-#{trademark_id}"
-      $stdout.puts "stub_html_url: #{stub_html_url}"
+                     # https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=57862/2013
+      stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=#{trademark_id}"
       filename = File.expand_path("../../data/#{result_folder}/detail_#{sprintf('%05i',counter)}_#{trademark_id.sub('/','.')}.html", __FILE__)
-      $stdout.puts "filename: #{filename}"    
       stub_response = File.read(filename)
       stub_request(:get, stub_html_url).
         with(

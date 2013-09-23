@@ -67,4 +67,17 @@ describe 'Tests parsing adress line' do
     plz.should == '3018'
     ort.should == 'Bern'
   end
+
+  it "must handle several postal addresses correctly" do 
+    full_address_line = 'Philipp Arnold, Seestrasse 37a, 6454 Flüelen, , Peter Tresoldi, c/o Xitix GmbH, Rathausplatz 4, 6460 Altdorf'
+    number = 'for_debugging'
+    zeile_1, zeile_2, zeile_3, zeile_4, zeile_5, plz, ort = Swissreg::parseAddress(number, full_address_line)
+    zeile_1.should == 'Philipp Arnold'
+    zeile_2.should == 'Seestrasse 37a'
+    zeile_3.should be_nil
+    zeile_4.should be_nil
+    zeile_5.should be_nil
+    plz.should == '6454'
+    ort.should == 'Flüelen'
+  end
 end
