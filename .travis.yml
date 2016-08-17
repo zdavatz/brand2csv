@@ -21,3 +21,6 @@ notifications:
 
 cache: bundler
 sudo: false
+
+env:
+- LANG=de_CH.UTF-8 LANGUAGE=de_CH
