@@ -10,3 +10,5 @@ watir/
 doc/
 tmp/
 *.patch
+fixtures/
+vendor/

@@ -7,3 +7,12 @@ require 'rake/testtask'
 
 RSpec::Core::RakeTask.new(:spec)
 
+desc 'Offer a gem task like hoe'
+task :gem => :build do
+  Rake::Task[:build].invoke
+end
+
+task :spec => :clean
+
+require 'rake/clean'
+CLEAN.include FileList['pkg/*.gem']
