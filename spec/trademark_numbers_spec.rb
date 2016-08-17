@@ -7,15 +7,15 @@ describe 'trademark number search' do
   before :each do
     dataDir =  File.expand_path(File.join(File.dirname(__FILE__), 'data'))
     filename = "#{dataDir}/result_short.html"
-    File.exists?(filename).should be_true
+    expect(File.exists?(filename)).to be_truthy
     @doc = Nokogiri::Slop(File.open(filename))
   end
   
   it "trademark number search must contain 9 numbers" do
     numbers = Swissreg::getTrademarkNumbers(@doc)
-    numbers.should_not be_nil
-    numbers.size.should == 9
-    numbers.index('00127/2011').should_not be_nil
+    expect(numbers).not_to be_nil
+    expect(numbers.size).to eq(9)
+    expect(numbers.index('00127/2011')).not_to be_nil
   end
 
 end

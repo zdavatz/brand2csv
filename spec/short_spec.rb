@@ -8,48 +8,48 @@ describe 'Short (e.g. corvatsch*)' do
     dataDir =  File.expand_path(File.join(File.dirname(__FILE__), 'data'))
     session = Swissreg.new("01.01.1990", 'Branding')
     filename = "#{dataDir}/result_short.html"
-    File.exists?(filename).should be_true
+    expect(File.exists?(filename)).to be_truthy
     doc = Nokogiri::Slop(File.open(filename))
     @einfach = Swissreg::Vereinfachte.new(doc)
   end
   
   it "short search must return info about trademark search" do
-    Swissreg::inputValue(@einfach.inputData, 'id_swissreg:mainContent:vivian').should == TrademarkSearch
+    expect(Swissreg::inputValue(@einfach.inputData, 'id_swissreg:mainContent:vivian')).to eq(TrademarkSearch)
   end
   
   it "short search must return hit information" do
-    @einfach.firstHit.should == 1
-    @einfach.nrHits.should == 9
+    expect(@einfach.firstHit).to eq(1)
+    expect(@einfach.nrHits).to eq(9)
   end
 
   it "short search must return details" do
-    @einfach.links2details.should_not be_nil
-    @einfach.links2details.size.should == 9
-    @einfach.links2details.index(901614).should_not be_nil
+    expect(@einfach.links2details).not_to be_nil
+    expect(@einfach.links2details.size).to eq(9)
+    expect(@einfach.links2details.index(901614)).not_to be_nil
   end
 
   it "short search must return information about (sub-)pages" do
-    @einfach.pageNr.should == 1
-    @einfach.nrSubPages.should == 1
+    expect(@einfach.pageNr).to eq(1)
+    expect(@einfach.nrSubPages).to eq(1)
   end
 
   it "short search getPostDataForSubpage" do
-    @einfach.pageNr.should == 1
+    expect(@einfach.pageNr).to eq(1)
     data = @einfach.getPostDataForSubpage(2)
-    data.should_not be_nil
-    Swissreg::inputValue(data, 'tmMainId').should == ""
-    Swissreg::inputValue(data, 'id_swissreg:mainContent:scroll_1').should == "idx2"
-    Swissreg::inputValue(data, 'id_swissreg:_idcl').should == 'id_swissreg:mainContent:scroll_1idx2'
+    expect(data).not_to be_nil
+    expect(Swissreg::inputValue(data, 'tmMainId')).to eq("")
+    expect(Swissreg::inputValue(data, 'id_swissreg:mainContent:scroll_1')).to eq("idx2")
+    expect(Swissreg::inputValue(data, 'id_swissreg:_idcl')).to eq('id_swissreg:mainContent:scroll_1idx2')
   end
 
   it "short search getPostDataForDetail" do
-    @einfach.pageNr.should == 1
+    expect(@einfach.pageNr).to eq(1)
     position = 3
     id = 937439
     data = @einfach.getPostDataForDetail(position, id)
-    data.should_not be_nil
-    Swissreg::inputValue(data, 'tmMainId').should == "#{id}"
-    Swissreg::inputValue(data, 'id_swissreg:mainContent:scroll_1').should == ''
-    Swissreg::inputValue(data, 'id_swissreg:_idcl').should == "id_swissreg:mainContent:data:#{position}:tm_no_detail:id_detail"
+    expect(data).not_to be_nil
+    expect(Swissreg::inputValue(data, 'tmMainId')).to eq("#{id}")
+    expect(Swissreg::inputValue(data, 'id_swissreg:mainContent:scroll_1')).to eq('')
+    expect(Swissreg::inputValue(data, 'id_swissreg:_idcl')).to eq("id_swissreg:mainContent:data:#{position}:tm_no_detail:id_detail")
   end
 end

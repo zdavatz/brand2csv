@@ -12,16 +12,16 @@ describe 'Get some simple example from swissreg' do
     setup_swissreg_ch_server(marke, timespan, 'aspectra', ["P-480296", "P-482236", "641074"])
     results = nil
     capture(:stdout) { results = Brand2csv::run(timespan, marke) }
-    results.should_not be_nil
-    results.size.should == 3
-    results[0].zeile_1.should == 'Aspectra AG'
-    results[0].plz.should == '8004'
-    results[0].ort.should == 'Zürich'
+    expect(results).not_to be_nil
+    expect(results.size).to eq(3)
+    expect(results[0].zeile_1).to eq('Aspectra AG')
+    expect(results[0].plz).to eq('8004')
+    expect(results[0].ort).to eq('Zürich')
     csv = "#{timespan}.csv"
     csv_lines = IO.readlines(csv)
-    csv_lines[1].split(';')[HasVertreterPos].should == "Ja"
-    csv_lines[2].split(';')[HasVertreterPos].should == "Ja"
-    csv_lines[3].split(';')[HasVertreterPos].should == "Nein"
+    expect(csv_lines[1].split(';')[HasVertreterPos]).to eq("Ja")
+    expect(csv_lines[2].split(';')[HasVertreterPos]).to eq("Ja")
+    expect(csv_lines[3].split(';')[HasVertreterPos]).to eq("Nein")
   end
 
   it "should get correct results from swissreg when owner has two postal addresses" do
@@ -31,16 +31,16 @@ describe 'Get some simple example from swissreg' do
     setup_swissreg_ch_server(marke, timespan, 'urner_wildheu', ["57862/2013"])
     results = nil
     capture(:stdout) { results = Brand2csv::run(timespan, marke) }
-    results.should_not be_nil
-    results.size.should == 1
-    results[0].zeile_1.should == 'Philipp Arnold'
-    results[0].zeile_2.should == 'Seestrasse 37a'
-    results[0].plz.should == '6454'
-    results[0].ort.should == 'Flüelen'
+    expect(results).not_to be_nil
+    expect(results.size).to eq(1)
+    expect(results[0].zeile_1).to eq('Philipp Arnold')
+    expect(results[0].zeile_2).to eq('Seestrasse 37a')
+    expect(results[0].plz).to eq('6454')
+    expect(results[0].ort).to eq('Flüelen')
     csv = "#{timespan}.csv"
     csv_lines = IO.readlines(csv)
-    csv_lines[1].split(';')[2].should == 'Philipp Arnold, Seestrasse 37a, 6454 Flüelen'
-    csv_lines[1].split(';')[HasVertreterPos].should == "Ja"
+    expect(csv_lines[1].split(';')[2]).to eq('Philipp Arnold, Seestrasse 37a, 6454 Flüelen')
+    expect(csv_lines[1].split(';')[HasVertreterPos]).to eq("Ja")
   end
 
 end
