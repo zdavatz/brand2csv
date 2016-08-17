@@ -5,9 +5,8 @@ module ServerMockHelper
   
   def setup_swissreg_ch_server(trademark, timespan, result_folder, trademark_ids)
     # main
-    stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/start.jsp"
     stub_response = File.read(File.expand_path("../../data/main.html", __FILE__))
-    stub_request(:get, stub_html_url).
+    stub_request(:get, "https://www.swissreg.ch/srclient/faces/jsp/start.jsp").
       with(
         :headers => {
           "Accept" => "*/*",
@@ -18,9 +17,8 @@ module ServerMockHelper
         :headers => {"Content-Type" => 'text/html; charset=utf-8'},
         :body    => stub_response)
     # erweiterte
-    stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/start.jsp"
     stub_response = File.read(File.expand_path("../../data/erweiterte_suche.html", __FILE__))
-    stub_request(:post, stub_html_url).
+    stub_request(:post,  "https://www.swissreg.ch/srclient/faces/jsp/start.jsp").
       with(
         :headers => {
           "Accept" => "*/*",
@@ -38,9 +36,8 @@ module ServerMockHelper
         :headers => {"Content-Type" => 'text/html; charset=utf-8'},
         :body    => stub_response)
     # result page 1
-    stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp"
     stub_response = File.read(File.expand_path("../../data/#{result_folder}/first_results.html", __FILE__))
-    stub_request(:post, stub_html_url).
+    stub_request(:post,  "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp").
       with(
         :headers => {
           "Accept" => "*/*",
@@ -78,9 +75,8 @@ module ServerMockHelper
         :headers => {"Content-Type" => 'text/html; charset=utf-8'},
         :body    => stub_response)
     # result page 2
-    stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp"
     stub_response = File.read(File.expand_path("../../data/#{result_folder}/first_results.html", __FILE__))
-    stub_request(:post, stub_html_url).
+    stub_request(:post,  "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr3.jsp").
       with(
         :headers => {
           "Accept" => "*/*",
@@ -121,11 +117,9 @@ module ServerMockHelper
     trademark_ids.each{ 
       |trademark_id|
       counter += 1
-                     # https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=57862/2013
-      stub_html_url = "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=#{trademark_id}"
       filename = File.expand_path("../../data/#{result_folder}/detail_#{sprintf('%05i',counter)}_#{trademark_id.sub('/','.')}.html", __FILE__)
       stub_response = File.read(filename)
-      stub_request(:get, stub_html_url).
+      stub_request(:get, "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr300.jsp?language=de&section=tm&id=#{trademark_id}").
         with(
           :headers => {
             "Accept" => "*/*",
@@ -137,6 +131,13 @@ module ServerMockHelper
           :body    => stub_response)
 
     }
+    stub_request(:post, "https://www.swissreg.ch/srclient/faces/jsp/trademark/sr30.jsp").
+    with(:body => {"autoScroll"=>"", "id_swissreg:_idcl"=>"", "id_swissreg:_link_hidden_"=>"", "id_swissreg:mainContent:id_sub_options_result:id_ckbTMChoice"=>"tm_lbl_app_date", "id_swissreg:mainContent:id_sub_options_result:sub_fieldset:id_cbxHitsPerPage"=>"250", "id_swissreg:mainContent:scroll_1"=>"",
+                   "id_swissreg:mainContent:vivian"=>
+                  "TRADEMARK REGISTER SEARCH TIMES: QUERY=[14] SELECT=[20] SERVER=[37] DELEGATE=[46]", "id_swissreg_SUBMIT"=>"1", "javax.faces.ViewState"=>"rO0ABXVyABNbTGphdmEubGFuZy5PYmplY3Q7kM5YnxBzKWwCAAB4cAAAAAN0AAE0cHQAFy9qc3AvdHJhZGVtYXJrL3NyMzAuanNw", "tmMainId"=>""}
+          ).
+      to_return(:status => 200, :body => "", :headers => {})
+
   end
  
 end

@@ -25,3 +25,33 @@ describe 'Csv' do
   end
 
 end
+describe 'CSV with matching addresses' do
+  before :each do
+    dataDir =  File.expand_path(File.join(File.dirname(__FILE__), 'data'))
+    @results = []
+    session = Swissreg.new("01.01.1990", 'Branding')
+    [ 'detail_00001_P-480296.html', 'detail_00002_P-482236.html'].each do |name|
+      filename = "#{dataDir}/aspectra/#{name}"
+      File.exists?(filename).should be_true
+      doc = Nokogiri::Slop(File.open(filename))
+      @results << Swissreg::getMarkenInfoFromDetail(doc)
+    end
+  end
+
+  Inhaber = 'Aspectra AG, Weberstrasse 4, 8004 Zürich'
+  First_TM = '08326/2000'
+  Second_TM = '10702/2000'
+
+  it "must create a csv file with only one address" do
+    file = Tempfile.new('foo_aspectr')
+    Swissreg::emitCsv(@results, file.path)
+    inhalte = IO.readlines(file.path)
+    @results[0].markennummer.should eq First_TM
+    @results[0].inhaber.should eq Inhaber
+    @results[1].markennummer.should eq Second_TM
+    @results[1].inhaber.should eq Inhaber
+    inhalte[1].split(';')[2].should eq Inhaber
+    inhalte[1].split(';')[1].should eq First_TM
+    inhalte[2].should be_nil
+  end
+end

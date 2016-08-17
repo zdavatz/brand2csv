@@ -358,7 +358,7 @@ module Brand2csv
           nrRetries += 1
           puts e.backtrace
           if nrRetries <= 3
-            puts "get_file did not work reinit session and retry for #{nr}. nrRetries #{nrRetries}/3. e #{e}"
+            puts "get_file did not work reinit session and retry for #{nummer}. nrRetries #{nrRetries}/3. e #{e}"
             sleep 60  # Sleep a minute to let network recover
             init_swissreg
             retry
@@ -377,6 +377,11 @@ module Brand2csv
 
     def Swissreg::emitCsv(results, filename='ausgabe.csv')
       return if results == nil or results.size == 0
+      all_inhaber = {}
+      results.each do |result|
+        next if all_inhaber[result.inhaber]
+        all_inhaber[result.inhaber] = result
+      end
       if /^1\.8/.match(RUBY_VERSION)
         ausgabe = File.open(filename, 'w+')
         # Write header
@@ -384,7 +389,7 @@ module Brand2csv
         results[0].members.each { |member| s += member + ';' }
         ausgabe.puts s.chop
         # write all line
-        results.each{ 
+        all_inhaber.values.each{
           |result| 
             s = ''
             result.members.each{ |member| 
@@ -397,14 +402,13 @@ module Brand2csv
                                   end
                                }
             ausgabe.puts s.chop
-        }        
+        }
         ausgabe.close
       else
-        
         CSV.open(filename,  'w', :headers=>results[0].members,
                                   :write_headers => true,
                                   :col_sep => ';'
-                                ) do |csv| results.each{ |x| csv << x }
+                                ) do |csv| all_inhaber.values.each{ |x| csv << x }
         end
       end
     end
