@@ -3,12 +3,21 @@ language: ruby
 script: bundle exec rake spec
 
 rvm:
-  - 1.8.7
+  - ruby-head
+  - 2.3.0
+  - 2.2.3
+  - 2.1.7
+  - 2.0
   - 1.9.3
-  - 2.0.0
+
+matrix:
+  allow_failures:
+    - rvm: ruby-head
+
 notifications:
   email:
     recipients:
       - ngiger@ywesee.com
-      - yasaka@ywesee.com
-      - zdavatz@ywesee.com
+
+cache: bundler
+sudo: false
