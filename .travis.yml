@@ -4,7 +4,7 @@ script: bundle exec rake spec
 
 rvm:
   - ruby-head
-  - 2.3.0
+  - 2.3.1
   - 2.2.3
   - 2.1.7
   - 2.0

@@ -18,14 +18,14 @@ Gem::Specification.new do |spec|
 
   # gem.add_runtime_dependency
   spec.add_runtime_dependency 'mechanize', '>= 2.6'
-  spec.add_runtime_dependency'json', '~> 1.7.7'
-  spec.add_runtime_dependency'nokogiri', '~> 1.5.10'
+  spec.add_runtime_dependency'json'
+  spec.add_runtime_dependency'nokogiri'
 
   # gem.add_development_dependency
   spec.add_development_dependency 'watir'
   spec.add_development_dependency 'watir-webdriver'
   spec.add_development_dependency 'webmock'
-  spec.add_development_dependency 'hoe', '>= 3.4'
+  spec.add_development_dependency 'rake'
   spec.add_development_dependency 'rdoc'
   spec.add_development_dependency 'rspec'
 
