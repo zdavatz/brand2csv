@@ -8,3 +8,5 @@ log/
 pkg/
 watir/
 doc/
+tmp/
+*.patch

@@ -8,7 +8,13 @@ group :development do
   gem 'watir-webdriver'
 
   gem 'rspec'
-  gem 'webmock'
+  gem 'webmock', '< 2.0.0'
   gem 'hoe', '>= 3.4'
   gem 'rdoc'
+  if RUBY_VERSION.match(/^1/)
+    gem 'pry-debugger'
+  else
+    gem 'pry-byebug'
+    gem 'pry-doc'
+  end
 end
