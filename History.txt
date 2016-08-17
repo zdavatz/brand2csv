@@ -1,3 +1,9 @@
+=== 0.3.1 17.08.2016
+
+* Write only first trademark for a given inhaber
+* Updated to new rspec syntax using transpec
+* Updated to use bundler/gem_task and brand2csv.gemspec
+
 === 0.3.0 23.09.2013
 
 * Fix errors under Ruby 1.8.7. Use Ja/Nein instead of false/true
