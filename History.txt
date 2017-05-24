@@ -1,3 +1,7 @@
+=== 0.3.2 24.05.2017
+
+* Install also brand2csv binary
+
 === 0.3.1 17.08.2016
 
 * Write only first trademark for a given inhaber
