@@ -1,0 +1,21 @@
+[package]
+name = "brand2csv"
+version = "0.4.0"
+edition = "2021"
+description = "Fetches Swiss trademark registrations from swissreg.ch into a CSV file"
+license = "GPL-3.0"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+clap = { version = "4", features = ["derive"] }
+csv = "1"
+futures = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "gzip", "cookies"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[[bin]]
+name = "brand2csv"
+path = "src/main.rs"
